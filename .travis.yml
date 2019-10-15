@@ -14,6 +14,6 @@ install:
   - pip install pytest-cov pytest-sugar responses flake8
 
 script:
-  - flake8 setup.py bwapi tests --exit-zero
-  - pytest -vv --cov=bwapi
+  - flake8 setup.py bcr-api tests --exit-zero
+  - pytest -vv --cov=bcr_api
 

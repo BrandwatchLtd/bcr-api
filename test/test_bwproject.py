@@ -3,7 +3,7 @@ import responses
 import os
 import tempfile
 
-from bcr.bwproject import BWProject
+from bcr_api.bwproject import BWProject
 
 
 class TestBWProjectUsernameCaseSensitivity(unittest.TestCase):

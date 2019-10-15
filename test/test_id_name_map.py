@@ -1,6 +1,6 @@
 import unittest
 
-from bcr.bwresources import BWQueries
+from bcr_api.bwresources import BWQueries
 
 query_id = 1111111111
 
