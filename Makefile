@@ -29,19 +29,19 @@ clean-test:
 ## check style with flake8, black
 lint: clean
 	pipenv run black . --check
-	pipenv run flake8 bcr tests --exit-zero
+	pipenv run flake8 bcr_api tests --exit-zero
 
 ## run tests with the default Python
 test: lint
-	pipenv run pytest -vv --cov=bcr
+	pipenv run pytest -vv --cov=bcr_api
 
 ## check code coverage quickly with the default Python
 coverage: clean
-	pipenv run pytest -vv --cov=bcr --cov-report html --cov-report term
+	pipenv run pytest -vv --cov=bcr_api --cov-report html --cov-report term
 	@echo '✨ 🍰 ✨  Open "htmlcov/index.html" in your browser to view report'
 ## upload wheel
 upload: dist
-	pipenv run twine upload -r pypi dist/bcr*
+	pipenv run twine upload -r pypi dist/bcr-api*
 
 ## increment the patch version, and tag in git
 bumpversion-patch: clean
