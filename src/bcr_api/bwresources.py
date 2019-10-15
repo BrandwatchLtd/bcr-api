@@ -8,7 +8,7 @@ from . import bwdata
 import logging
 
 
-logger = logging.getLogger("bwapi")
+logger = logging.getLogger("bcr")
 
 
 class AmbiguityError(ValueError):
@@ -263,35 +263,44 @@ class BWQueries(BWResource, bwdata.BWData):
         self.tags = BWTags(self.project)
         self.categories = BWCategories(self.project)
 
-    def upload(self, create_only=False, modify_only=False, backfill_date="", **kwargs):
+    def upload(self, create_only=False, modify_only=False, **kwargs):
         """
         Uploads a query.
 
         Args:
-            create_only:    If True and the query already exists, no action will be triggered - Optional.  Defaults to False.
-            modify_only:    If True and the query does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:  Date which you'd like to backfill the query too (yyyy-mm-dd) - Optional.
-            kwargs:         You must pass in name (string) and includedTerms (string).  You can also optionally pass in languages, type, industry and samplePercent.
+            name: Query name
+            booleanQuery: Query boolean (e.g. "cat AND dog")
+            startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
+            contentSources: Optional, defaults to same sources in UI
+            description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
+            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            query_type: Optional, defaults to 'monitor'
+
+        Raises:
+            KeyError: If you do not pass name and booleanQuery for each query in the data_list.
 
         Returns:
             The uploaded query information in a dictionary of the form {query1name: query1id}
         """
-        return self.upload_all([kwargs], create_only, modify_only, backfill_date)
+        return self.upload_all([kwargs], create_only, modify_only)
 
-    def upload_all(
-        self, data_list, create_only=False, modify_only=False, backfill_date=""
-    ):
+    def upload_all(self, data_list, create_only=False, modify_only=False):
         """
         Uploads multiple queries.
 
         Args:
-            data_list:      You must pass in name (string) and includedTerms (string).  You can also optionally pass in languages, type, industry and samplePercent.
-            create_only:    If True and the query already exists, no action will be triggered - Optional.  Defaults to False.
-            modify_only:    If True and the query does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:  Date which you'd like to backfill the query too (yyyy-mm-dd) - Optional.
+            name: Query name
+            booleanQuery: Query boolean (e.g. "cat AND dog")
+            startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
+            contentSources: Optional, defaults to same sources in UI
+            description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
+            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            query_type: Optional, defaults to 'monitor'
 
         Raises:
-            KeyError: If you do not pass name and includedTerms for each query in the data_list.
+            KeyError: If you do not pass name and booleanQuery for each query in the data_list.
 
         Returns:
             The uploaded query information in a dictionary of the form {query1name: query1id, query2name: query2id, ...}
@@ -300,16 +309,6 @@ class BWQueries(BWResource, bwdata.BWData):
         queries = super(BWQueries, self).upload_all(
             data_list, create_only=False, modify_only=False
         )
-
-        # backfill if passed in with individual query data
-        for query in data_list:
-            if "backfill_date" in query:
-                self.backfill(queries[query["name"]], query["backfill_date"])
-
-        # backfill if passed in for all
-        if backfill_date != "":
-            for query in queries:
-                self.backfill(queries[query], backfill_date)
 
         return queries
 
@@ -337,23 +336,6 @@ class BWQueries(BWResource, bwdata.BWData):
                 raise KeyError(
                     "We cannot support automated renaming of channels at this time."
                 )
-
-    def backfill(self, query_id, backfill_date):
-        """
-        Backfills a query to a specified date.
-
-        Args:
-            query_id:       Query id
-            backfill_date:  Date that you'd like to backfill the query to (yyy-mm-dd).
-
-        Returns:
-            Server's response to the post request.
-        """
-        backfill_endpoint = "queries/" + str(query_id) + "/backfill"
-        backfill_data = {"minDate": backfill_date, "queryId": query_id}
-        return self.project.post(
-            endpoint=backfill_endpoint, data=json.dumps(backfill_data)
-        )
 
     def get_mention(self, **kwargs):
         """
@@ -461,37 +443,63 @@ class BWQueries(BWResource, bwdata.BWData):
             return setting
 
     def _fill_data(self, data):
-        filled = {}
 
-        if ("name" not in data) or ("includedTerms" not in data):
-            raise KeyError("Need name and includedTerms to post query", data)
-        if self.check_resource_exists(
-            data["name"]
-        ):  # if resource exists, create value for filled['id']
+        default_content_sources = [
+            "qq",
+            "news",
+            "youtube",
+            "forum",
+            "twitter",
+            "review",
+            "facebook",
+            "reddit",
+            "tumblr",
+            "instagram",
+            "blog",
+        ]
+
+        filled = dict()
+
+        if ("name" not in data) or ("booleanQuery" not in data):
+            raise KeyError("Need name and booleanQuery to post query", data)
+
+        filled["booleanQuery"] = data["booleanQuery"]
+
+        # if resource exists, create value for filled['id']
+        if self.check_resource_exists(data["name"]):
             filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
         else:  # if resource doesn't exist, add name to filled dictionary
             filled["name"] = data["name"]
 
-        filled["includedTerms"] = data["includedTerms"]
-        filled["languages"] = data["languages"] if "languages" in data else ["en"]
-        filled["type"] = data["type"] if "type" in data else "search string"
-        filled["industry"] = (
-            data["industry"] if "industry" in data else "general-(recommended)"
-        )
-        filled["samplePercent"] = (
-            data["samplePercent"] if "samplePercent" in data else 100
-        )
-        filled["languageAgnostic"] = (
-            data["languageAgnostic"] if "languageAgnostic" in data else False
-        )
+        # params with default values
+        filled["type"] = data.get("query_type", "monitor")
+        filled["contentSources"] = data.get("contentSources", default_content_sources)
+        filled["monitorSamplePercentage"] = data.get("monitorSamplePercentage", 100)
+        filled["description"] = data.get("description", "")
+        # currently languages field defaults to 'en', similar to UI, but it could alternatively default to False, to create a language agnostic query
+        filled["languages"] = data.get(
+            "languages", "en"
+        )  # BUG: Might need to turn single item into list
+        # If user passes in string to languages parameter, turn into a list containing only that string
+        if isinstance(filled["languages"], str):
+            filled["languages"] = [filled["languages"]]
+
+        # optional params, with no defaults
+        if "startDate" in data:
+            filled["startDate"] = data["startDate"]
+
+        # set languageAgnostic to True if user explicitly passes in `None` within `languages` parameter
+        if "language" in data:
+            filled["languageAgnostic"] = False
+        if "language" not in data:
+            filled["languageAgnostic"] = True
 
         # validating the query search - comment this out to skip validation
         self.project.validate_query_search(
-            query=filled["includedTerms"], language=filled["languages"]
+            query=filled["booleanQuery"], language=filled["languages"]
         )
-
         return json.dumps(filled)
 
     def _fill_mention_params(self, data):
@@ -565,7 +573,6 @@ class BWGroups(BWResource, bwdata.BWData):
         query_data_list,
         create_only=False,
         modify_only=False,
-        backfill_date="",
         **kwargs
     ):
         """
@@ -576,14 +583,13 @@ class BWGroups(BWResource, bwdata.BWData):
             query_data_list:    List of dictionaries, where each dictionary includes the information for one query in the following format {name: queryname, includedTerms: searchstring}
             create_only:        If True and the group already exists, no action will be triggered - Optional.  Defaults to False.
             modify_only:        If True and the group does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:      Date which you'd like to backfill the queries too (yyyy-mm-dd) - Optional.
             kwargs:             You can pass in shared, sharedProjectIds and users - Optional.
 
         Returns:
             The uploaded group information in a dictionary of the form {groupname: groupid}
         """
         kwargs["queries"] = self.queries.upload_all(
-            query_data_list, create_only, modify_only, backfill_date
+            query_data_list, create_only, modify_only
         )
         kwargs["name"] = group_name
         return self.upload(create_only, modify_only, **kwargs)
@@ -1755,7 +1761,7 @@ class BWSignals(BWResource):
                     subscriber,
                 )
 
-        if self.get_resource_id(data["name"]):
+        if self.check_resource_exists(data["name"]):
             filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]

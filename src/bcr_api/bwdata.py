@@ -5,7 +5,7 @@ import datetime
 from . import filters
 import logging
 
-logger = logging.getLogger("bwapi")
+logger = logging.getLogger("bcr")
 
 
 class BWData:

@@ -7,9 +7,9 @@ import logging
 import os
 from pathlib import Path
 
-DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser("~")) / ".bwapi" / "credentials.txt"
+DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser("~")) / ".bcr" / "credentials.txt"
 
-logger = logging.getLogger("bwapi")
+logger = logging.getLogger("bcr")
 
 
 class CredentialsStore:

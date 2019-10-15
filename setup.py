@@ -11,14 +11,14 @@ with open("README.md") as infile:
 
 
 setup(
-    name="bwapi",
-    version="4.1.0",
-    description="A software development kit for the Brandwatch API",
+    name="bcr-api",
+    version="1.0.0",
+    description="A client library for the Brandwatch Consumer Research API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/BrandwatchLtd/api_sdk",
-    author="Amy Barker, Jamie Lebovics, Paul Siegel and Jessica Bowden",
-    author_email="amyb@brandwatch.com, paul@brandwatch.com, jess@brandwatch.com",
+    url="https://github.com/BrandwatchLtd/bcr-api",
+    author="Paul Siegel, Matthew Franglen, Colin Sullivan, Hamish Morgan and Peter Fairfax",
+    author_email="paul@brandwatch.com, matthew@brandwatch.com, csullivan@brandwatch.com, peterf@brandwatch.com",
     license="License :: OSI Approved :: MIT License",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -30,9 +30,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    packages=find_packages(where="src", include=["bwapi"]),
+    packages=find_packages(where="src", include=["bcr_api"]),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["bwapi-authenticate = bwapi.authenticate:main"]},
+    entry_points={"console_scripts": ["bcr-authenticate = bcr_api.authenticate:main"]},
     install_requires=requirements,
     tests_require=test_requirements,
     setup_requires=setup_requirements,
