@@ -465,8 +465,10 @@ class BWQueries(BWResource, bwdata.BWData):
         if ("name" not in data) or ("booleanQuery" not in data):
             raise KeyError("Need name and booleanQuery to post query", data)
 
-        if ('language' in data) and ('languageAgnostic' in data):
-            raise ValueError ('Please choose either to specify languages or a language agnostic query')
+        if ("language" in data) and ("languageAgnostic" in data):
+            raise ValueError(
+                "Please choose either to specify languages or a language agnostic query"
+            )
 
         filled["booleanQuery"] = data["booleanQuery"]
 
@@ -485,9 +487,7 @@ class BWQueries(BWResource, bwdata.BWData):
         filled["monitorSamplePercentage"] = data.get("monitorSamplePercentage", 100)
         filled["description"] = data.get("description", "")
         # currently languages field defaults to 'en', similar to UI, but it could alternatively default to False, to create a language agnostic query
-        filled["languages"] = data.get(
-            "languages", "en"
-        )
+        filled["languages"] = data.get("languages", "en")
         # If user passes in string to languages parameter, turn into a list containing only that string
         if isinstance(filled["languages"], str):
             filled["languages"] = [filled["languages"]]
