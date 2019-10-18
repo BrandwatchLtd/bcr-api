@@ -273,7 +273,8 @@ class BWQueries(BWResource, bwdata.BWData):
             startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
             contentSources: Optional, defaults to same sources in UI
             description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
-            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            languages: Optional, defaults to en
+            languageAgnostic: Optional, set to True instead of passing in a language for the query to match against all mentions regardless of language (generally not recommended)
             monitor_sample_percentage: Optional, defaults to 100 (percent)
             query_type: Optional, defaults to 'monitor'
 
@@ -295,7 +296,8 @@ class BWQueries(BWResource, bwdata.BWData):
             startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
             contentSources: Optional, defaults to same sources in UI
             description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
-            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            languages: Optional, defaults to en
+            languageAgnostic: Optional, set to True instead of passing in a language for the query to match against all mentions regardless of language (generally not recommended)
             monitor_sample_percentage: Optional, defaults to 100 (percent)
             query_type: Optional, defaults to 'monitor'
 
@@ -463,6 +465,9 @@ class BWQueries(BWResource, bwdata.BWData):
         if ("name" not in data) or ("booleanQuery" not in data):
             raise KeyError("Need name and booleanQuery to post query", data)
 
+        if ('language' in data) and ('languageAgnostic' in data):
+            raise ValueError ('Please choose either to specify languages or a language agnostic query')
+
         filled["booleanQuery"] = data["booleanQuery"]
 
         # if resource exists, create value for filled['id']
@@ -475,13 +480,14 @@ class BWQueries(BWResource, bwdata.BWData):
 
         # params with default values
         filled["type"] = data.get("query_type", "monitor")
+        filled["languageAgnostic"] = data.get("languageAgnostic", False)
         filled["contentSources"] = data.get("contentSources", default_content_sources)
         filled["monitorSamplePercentage"] = data.get("monitorSamplePercentage", 100)
         filled["description"] = data.get("description", "")
         # currently languages field defaults to 'en', similar to UI, but it could alternatively default to False, to create a language agnostic query
         filled["languages"] = data.get(
             "languages", "en"
-        )  # BUG: Might need to turn single item into list
+        )
         # If user passes in string to languages parameter, turn into a list containing only that string
         if isinstance(filled["languages"], str):
             filled["languages"] = [filled["languages"]]
@@ -489,12 +495,6 @@ class BWQueries(BWResource, bwdata.BWData):
         # optional params, with no defaults
         if "startDate" in data:
             filled["startDate"] = data["startDate"]
-
-        # set languageAgnostic to True if user explicitly passes in `None` within `languages` parameter
-        if "language" in data:
-            filled["languageAgnostic"] = False
-        if "language" not in data:
-            filled["languageAgnostic"] = True
 
         # validating the query search - comment this out to skip validation
         self.project.validate_query_search(
