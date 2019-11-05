@@ -140,36 +140,6 @@ special_options = {
     "resourceType": ["public-facebook-post", "public-facebook-comment"],
     "xresourceType": ["public-facebook-post", "public-facebook-comment"],
     "pageType": [
-        "news",
-        "image",
-        "licensed",
-        "facebook",
-        "video",
-        "instagram",
-        "blog",
-        "forum",
-        "general",
-        "twitter",
-        "print",
-        "review",
-        "microblog"
-        ],
-    "xpageType": [
-        "news",
-        "image",
-        "licensed",
-        "facebook",
-        "video",
-        "instagram",
-        "blog",
-        "forum",
-        "general",
-        "twitter",
-        "print",
-        "review",
-        "microblog"
-        ],
-    "contentSources":[
         "blog",
         "twitter",
         "youtube",
@@ -187,7 +157,7 @@ special_options = {
         "four_chan",
         "facebook"
         ],
-    "xcontentSources":[
+    "xpageType": [
         "blog",
         "twitter",
         "youtube",
