@@ -38,6 +38,7 @@ class BWUser:
         grant_type="api-password",
         client_id="brandwatch-api-client",
         apiurl="https://api.brandwatch.com/",
+        secondary_user=None
     ):
         """
         Creates a BWUser object.
@@ -51,22 +52,39 @@ class BWUser:
         self.apiurl = apiurl
         self.oauthpath = "oauth/token"
         self.credentials_store = CredentialsStore(credentials_path=token_path)
-        if token:
-            self.username, self.token = self._test_auth(username, token)
-            self.credentials_store[self.username] = self.token
-        elif username is not None and password is not None:
-            self.username, self.token = self._get_auth(
-                username, password, token_path, grant_type, client_id
-            )
-            if token_path is not None:
-                self.credentials_store[self.username] = self.token
-        elif username is not None:
-            self.username = username
-            self.token = self.credentials_store[username]
+        
+        if secondary_user:
+            grant_type="application-become"
+            client_id="brandwatch-application-client"
+            self.username, self.token = self._get_auth(username, password, token_path, "password", client_id)
+            url = ("https://api.brandwatch.com/oauth/token?access_token={0}"\
+                "&username={1}"\
+                "&grant_type={2}"\
+                "&client_id={3}"
+                ).format(self.token, secondary_user, grant_type, client_id)
+            r = requests.post(url)
+
+            if "access_token" in r.json():
+                self.token = r.json()["access_token"]
+                self._test_auth(secondary_user, self.token)
+            else:
+                raise KeyError("Failed to become %s" % secondary_user)
         else:
-            raise KeyError(
-                "Must provide valid token, username and password, or username and path to token file"
-            )
+            if token:
+                self.username, self.token = self._test_auth(username, token)
+                self.credentials_store[self.username] = self.token
+            elif username is not None and password is not None:
+                self.username, self.token = self._get_auth(
+                    username, password, token_path, grant_type, client_id)
+                if token_path is not None:
+                    self.credentials_store[self.username] = self.token
+            elif username is not None:
+                self.username = username
+                self.token = self.credentials_store[username]
+            else:
+                raise KeyError(
+                    "Must provide valid token, username and password, or username and path to token file"
+                )
 
     def _test_auth(self, username, token):
 
@@ -120,19 +138,19 @@ class BWUser:
         Checks a query search to see if it contains errors.  Same query debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the query.
+            booleanQuery: Search terms included in the query.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
+        if "booleanQuery" not in kwargs:
             raise KeyError("Must pass: query = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(
-            verb=requests.get, address="query-validation", params=kwargs
+            verb=requests.post, address="query-validation", params=kwargs
         )
         return valid_search
 
@@ -141,14 +159,14 @@ class BWUser:
         Checks a rule search to see if it contains errors.  Same rule debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the rule.
+            booleanQuery: Search terms included in the rule.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
-            raise KeyError("Must pass: query = 'search terms'")
+        if "booleanQuery" not in kwargs:
+            raise KeyError("Must pass: booleanQuery = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
@@ -258,6 +276,7 @@ class BWProject(BWUser):
         grant_type="api-password",
         client_id="brandwatch-api-client",
         apiurl="https://api.brandwatch.com/",
+        secondary_user = None
     ):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
@@ -269,6 +288,10 @@ class BWProject(BWUser):
             token:          Access token - Optional.
             token_path:     File path to the file where access tokens will be read from and written to - Optional.
         """
+        if secondary_user:
+            grant_type="application-become"
+            client_id="brandwatch-application-client"
+        
         super().__init__(
             token=token,
             token_path=token_path,
@@ -277,6 +300,7 @@ class BWProject(BWUser):
             grant_type=grant_type,
             client_id=client_id,
             apiurl=apiurl,
+            secondary_user = secondary_user
         )
         self.project_name = ""
         self.project_id = -1
