@@ -12,7 +12,7 @@ with open("README.md") as infile:
 
 setup(
     name="bcr-api",
-    version="1.0.1",
+    version="1.0.2",
     description="A client library for the Brandwatch Consumer Research API",
     long_description=long_description,
     long_description_content_type="text/markdown",
