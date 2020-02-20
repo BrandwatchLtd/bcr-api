@@ -23,7 +23,7 @@ def authenticate(username, password, credentials_path=None):
 
 
 def main():
-    logger = logging.getLogger("bcr")
+    logger = logging.getLogger("bcr_api")
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     formatter = logging.Formatter("%(levelname)s: %(message)s", "%H:%M:%S")

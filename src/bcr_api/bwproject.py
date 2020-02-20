@@ -8,7 +8,7 @@ import logging
 
 from .credentials import CredentialsStore
 
-logger = logging.getLogger("bcr")
+logger = logging.getLogger("bcr_api")
 handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%H:%M:%S")
 handler.setFormatter(formatter)
