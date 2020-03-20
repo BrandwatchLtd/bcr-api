@@ -37,6 +37,7 @@ class BWUser:
         password=None,
         grant_type="api-password",
         client_id="brandwatch-api-client",
+        client_secret=None,
         apiurl="https://api.brandwatch.com/",
     ):
         """
@@ -56,7 +57,7 @@ class BWUser:
             self.credentials_store[self.username] = self.token
         elif username is not None and password is not None:
             self.username, self.token = self._get_auth(
-                username, password, token_path, grant_type, client_id
+                username, password, token_path, grant_type, client_id, client_secret
             )
             if token_path is not None:
                 self.credentials_store[self.username] = self.token
@@ -86,13 +87,14 @@ class BWUser:
         else:
             raise KeyError("Could not validate provided token", user)
 
-    def _get_auth(self, username, password, token_path, grant_type, client_id):
+    def _get_auth(self, username, password, token_path, grant_type, client_id, client_secret):
         token = requests.post(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
                 "grant_type": grant_type,
                 "client_id": client_id,
+                "client_secret":client_secret,
             },
             data={"password": password},
         ).json()
@@ -257,6 +259,7 @@ class BWProject(BWUser):
         password=None,
         grant_type="api-password",
         client_id="brandwatch-api-client",
+        client_secret=None,
         apiurl="https://api.brandwatch.com/",
     ):
         """
@@ -276,6 +279,7 @@ class BWProject(BWUser):
             password=password,
             grant_type=grant_type,
             client_id=client_id,
+            client_secret=client_secret,
             apiurl=apiurl,
         )
         self.project_name = ""
