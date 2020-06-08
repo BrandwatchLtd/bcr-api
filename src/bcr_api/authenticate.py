@@ -1,13 +1,12 @@
 # coding=utf-8
 
-from getpass import getpass
+import argparse
 import logging
+from getpass import getpass
 from pathlib import Path
 
 from . import credentials
 from .bwproject import BWUser
-
-import argparse
 
 
 def authenticate(username, password, credentials_path=None):

@@ -28,8 +28,9 @@ clean-test:
 
 ## check style with flake8, black
 lint: clean
-	pipenv run black . --check
-	pipenv run flake8 bcr_api tests --exit-zero
+	pipenv run isort -y
+	pipenv run black .
+	pipenv run flake8 . --exit-zero
 
 ## run tests with the default Python
 test: lint

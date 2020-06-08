@@ -1,7 +1,8 @@
-import unittest
-import responses
 import os
 import tempfile
+import unittest
+
+import responses
 
 from bcr_api.bwproject import BWProject
 

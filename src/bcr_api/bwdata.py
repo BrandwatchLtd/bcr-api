@@ -2,8 +2,9 @@
 bwdata contains the BWData class.
 """
 import datetime
-from . import filters
 import logging
+
+from . import filters
 
 logger = logging.getLogger("bcr_api")
 

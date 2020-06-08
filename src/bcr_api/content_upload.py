@@ -1,11 +1,11 @@
 """Module for uploading custom content"""
 
 import logging
-from requests import post, get
 
-from .validation import JSONDict
+from requests import get, post
+
 from .bwproject import BWProject
-from .validation import UploadCollection
+from .validation import JSONDict, UploadCollection
 
 logger = logging.getLogger(__name__)
 

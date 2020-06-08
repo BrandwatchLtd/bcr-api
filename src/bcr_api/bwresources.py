@@ -3,10 +3,9 @@ bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCat
 """
 
 import json
-from . import filters
-from . import bwdata
 import logging
 
+from . import bwdata, filters
 
 logger = logging.getLogger("bcr_api")
 

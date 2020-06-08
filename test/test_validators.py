@@ -10,10 +10,9 @@ from _pytest.capture import CaptureFixture
 from _pytest.fixtures import SubRequest
 from pydantic import ValidationError
 
-from bcr_api.content_upload import ContentUploadAPI
 from bcr_api.bwproject import BWProject
-
-from bcr_api.validation import Geolocation, UploadCollection, UploadItem, JSONDict
+from bcr_api.content_upload import ContentUploadAPI
+from bcr_api.validation import Geolocation, JSONDict, UploadCollection, UploadItem
 
 
 def test_correct_upload_item(upload_items: List[JSONDict]) -> None:

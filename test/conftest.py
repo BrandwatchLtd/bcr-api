@@ -2,15 +2,16 @@
 """Test Fixtures."""
 
 
-import pandas as pd
-import responses
-import pytest
-from pandas.io.json import json_normalize
 from pathlib import Path
-
 from typing import List
-from bcr_api.validation import JSONDict
+
+import pandas as pd
+import pytest
+import responses
+from pandas.io.json import json_normalize
+
 from bcr_api.bwproject import BWProject
+from bcr_api.validation import JSONDict
 
 
 @pytest.fixture

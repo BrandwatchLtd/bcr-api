@@ -2,9 +2,10 @@
 bwproject contains the BWUser and BWProject classes
 """
 
-import requests
-import time
 import logging
+import time
+
+import requests
 
 from .credentials import CredentialsStore
 

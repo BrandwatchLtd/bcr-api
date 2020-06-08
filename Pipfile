@@ -18,6 +18,7 @@ black = "*"
 pytest-cov = "*"
 pytest-sugar = "*"
 mypy = "*"
+isort = "*"
 
 [packages]
 bcr-api = {editable = true,path = "."}
