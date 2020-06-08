@@ -1,7 +1,7 @@
 """Module for uploading custom content"""
 
 import logging
-from requests import Response, post
+from requests import post, get
 
 from .validation import JSONDict
 from .bwproject import BWProject
@@ -10,29 +10,20 @@ from .validation import UploadCollection
 logger = logging.getLogger(__name__)
 
 
-def handle_response(response: Response) -> JSONDict:
-    """Ensure responses do not contain errors."""
-    if not response.ok:
-        raise ValueError(f"Something Went Wrong. {response.text}")
-    elif ("status" in response.json()) and response.json()["status"] == "error":
-        raise ValueError(f"Something Went Wrong. {response.text}")
-    return response.json()
-
-
 class ContentUploadAPI:
     """Class for working with Content Upload API.
 
     The Custom Content Upload endpoint enables the uploading of documents for analysis in the Brandwatch Consumer Research Platform.
     Users have uploaded survey responses, proprietary content, and other types of data not available in the Brandwatch data library.
-    To use this endpoint, please contact support and they will create a new custom content type for you.
 
     # Example Usage
 
     ```python
-    >>> from bwpy import BwpySession, ContentUploadAPI
-    >>> from bwpy.models import UploadCollection, UploadItem
-    >>> session = BwpySession.load_auth_from_file()
-    >>> upload_client = ContentUploadAPI(session)
+    >>> from bcr_api.bwproject import BWProject,
+    >>> from bcr_api.content_upload import ContentUploadAPI
+    >>> from bcr_api.validation import UploadCollection
+    >>> project = project = BWProject(project="test_project", token="test-token-00000", username="test_username@brandwatch.com")
+    >>> upload_client = ContentUploadAPI(project)
     >>> items = [
     {
         "date": "2010-01-26T16:14:00",
@@ -120,11 +111,13 @@ class ContentUploadAPI:
         }
         ```
         """
-        return handle_response(self.project.post(self.TEMPLATE, data=content_type))
+        return self.project.bare_request(
+            post, self.TEMPLATE, address_suffix="", data=content_type
+        )
 
     def list_content_sources(self) -> JSONDict:
         """
         Content Source list.
 
         """
-        return handle_response(self.project.get(self.TEMPLATE + "sources/list"))
+        return self.project.bare_request(get, self.TEMPLATE, address_suffix="")
