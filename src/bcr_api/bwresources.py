@@ -61,9 +61,7 @@ class BWResource:
         """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)
         """
         if not resource:
-            return (
-                ""
-            )  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
+            return ""  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
         if isinstance(resource, int):
             if resource not in self.names.keys():
                 raise KeyError(
