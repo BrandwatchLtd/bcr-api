@@ -134,7 +134,7 @@ class BWUser:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(
-            verb=requests.get, address="query-validation", params=kwargs
+            verb=requests.post, address="query-validation", params=kwargs
         )
         return valid_search
 
