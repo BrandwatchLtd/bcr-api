@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Union
 import ftfy
 import pandas as pd
 import pendulum
-from pandas.io.json import json_normalize
 from pendulum.exceptions import ParserError
 from pydantic import BaseModel, Field, HttpUrl, NoneStr, validator
 
@@ -81,7 +80,6 @@ class UploadItem(BaseModel):
     ## Fields
         * title: str
         * url: HttpUrl
-        * contentSource: Integer
         * guid: str
         * author: str
         * language: str(max_length=2, min_length=2)
@@ -103,7 +101,6 @@ class UploadItem(BaseModel):
     >>> item_dict = {
         "date": "2010-01-26T16:14:00",
         "contents": "Example content",
-        "contentSource": "34354220140"
         "guid": "This is my guid",
         "title": "Example Title",
         "author": "me",
@@ -139,7 +136,6 @@ class UploadItem(BaseModel):
     contents: str = Field(..., max_lenth=16384)
     url: HttpUrl = None  # type: ignore
     guid: NoneStr = None
-    contentSource: int
     geolocation: Optional[Geolocation] = None
     custom: Optional[Dict[str, str]] = None
     age: Optional[int] = None
@@ -326,7 +322,7 @@ class UploadCollection(BaseModel):
 
     def to_dataframe(self) -> pd.DataFrame:
         """Convert UploadCollection to pandas Dataframe with one colume for each field"""
-        return json_normalize(self.dict())
+        return pd.json_normalize(self.dict())
 
     def dict(self, *args: Any, **kwargs: Any):  # type: ignore
         return [rec.dict(*args, **kwargs) for rec in self.items]

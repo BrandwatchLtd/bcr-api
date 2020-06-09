@@ -8,7 +8,6 @@ from typing import List
 import pandas as pd
 import pytest
 import responses
-from pandas.io.json import json_normalize
 
 from bcr_api.bwproject import BWProject
 from bcr_api.validation import JSONDict
@@ -22,7 +21,6 @@ def upload_items() -> List[JSONDict]:
             "title": "Example Title",
             "date": "2010-01-26T16:14:00+00:00",
             "guid": "http://www.brandwatch.com/post1",
-            "contentSource": 34354220140,
             "author": "me",
             "url": "http://www.brandwatch.com/post1",
             "contents": "Example content",
@@ -35,7 +33,6 @@ def upload_items() -> List[JSONDict]:
             "author": "me",
             "url": "http://www.brandwatch.com/post2",
             "guid": "http://www.brandwatch.com/post2",
-            "contentSource": 34354220140,
             "contents": "Example content",
             "language": "en",
             "geolocation": {"id": "USA.NY"},
@@ -45,7 +42,6 @@ def upload_items() -> List[JSONDict]:
             "contents": "Example content",
             "url": "http://www.brandwatch.com/post3",
             "guid": "http://www.brandwatch.com/post3",
-            "contentSource": 34354220140,
             "title": "Example Title",
             "author": "me",
             "language": "en",
@@ -62,7 +58,7 @@ def upload_items() -> List[JSONDict]:
 @pytest.fixture
 def upload_dataframe(upload_items: List[JSONDict]) -> pd.DataFrame:
     """Pandas dataframe of upload content"""
-    return json_normalize(upload_items)
+    return pd.json_normalize(upload_items)
 
 
 @pytest.fixture

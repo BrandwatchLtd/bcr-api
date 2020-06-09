@@ -11,7 +11,7 @@ from _pytest.fixtures import SubRequest
 from pydantic import ValidationError
 
 from bcr_api.bwproject import BWProject
-from bcr_api.content_upload import ContentUploadAPI
+from bcr_api.data_upload import DataUploadAPI
 from bcr_api.validation import Geolocation, JSONDict, UploadCollection, UploadItem
 
 
@@ -220,10 +220,12 @@ def test_batch_upload(
         responses.POST, fake_project.apiurl + "content/sources", json={}, status=200
     )
 
-    client = ContentUploadAPI(fake_project)
+    client = DataUploadAPI(fake_project)
 
     with caplog.at_level(logging.INFO):
-        response = client.upload(items=large_upload_collection)
+        response = client.upload(
+            content_type_id=34354220140, items=large_upload_collection
+        )
 
         assert (
             caplog.records[0].msg

@@ -10,20 +10,20 @@ from .validation import JSONDict, UploadCollection
 logger = logging.getLogger(__name__)
 
 
-class ContentUploadAPI:
-    """Class for working with Content Upload API.
+class DataUploadAPI:
+    """Class for working with Data Upload API.
 
-    The Custom Content Upload endpoint enables the uploading of documents for analysis in the Brandwatch Consumer Research Platform.
+    The Data Upload endpoint enables the uploading of documents for analysis in the Brandwatch Consumer Research Platform.
     Users have uploaded survey responses, proprietary content, and other types of data not available in the Brandwatch data library.
 
     # Example Usage
 
     ```python
     >>> from bcr_api.bwproject import BWProject,
-    >>> from bcr_api.content_upload import ContentUploadAPI
+    >>> from bcr_api.data_upload import DataUploadAPi
     >>> from bcr_api.validation import UploadCollection
     >>> project = project = BWProject(project="test_project", token="test-token-00000", username="test_username@brandwatch.com")
-    >>> upload_client = ContentUploadAPI(project)
+    >>> upload_client = DataUploadAPI(project)
     >>> items = [
     {
         "date": "2010-01-26T16:14:00",
@@ -62,8 +62,10 @@ class ContentUploadAPI:
         self.project = project
         self.TEMPLATE = project.apiurl + "content/sources"
 
-    def upload(self, items: UploadCollection) -> JSONDict:
-        """Upload collection of Custom Content to Brandwatch platform.
+    def upload(
+        self, content_type_id: int, items: UploadCollection, request_usage: bool = False
+    ) -> JSONDict:
+        """Upload collection of custom content to Brandwatch platform.
 
         If greater than 1000 items passed, reverts to batch upload.
         # Arguments
@@ -73,20 +75,28 @@ class ContentUploadAPI:
         """
         if len(items) > 1000:
             logger.info("More than 1000 items found.  Uploading in batches of 1000.")
-            return self.batch_upload(items=items)
+            return self.batch_upload(
+                content_type_id, items=items, request_usage=request_usage
+            )
 
         return self.project.bare_request(
             post,
             self.TEMPLATE,
             address_suffix="",
-            data={"items": items.dict(skip_defaults=True)},
+            data={
+                "contentSource": content_type_id,
+                "items": items.dict(skip_defaults=True),
+                "requestUsage": request_usage,
+            },
         )
 
-    def batch_upload(self, items: UploadCollection) -> JSONDict:
-        """Batch upload collection of Custom Content to Brandwatch platform in groups of 1000.
+    def batch_upload(
+        self, content_type_id: int, items: UploadCollection, request_usage: bool = False
+    ) -> JSONDict:
+        """Batch upload collection of custom content to Brandwatch platform in groups of 1000.
 
         # Arguments
-            document_type: Integer, The id of the document type to which the uploading docs will belong.
+            content_type_id: Integer, The id of the document type to which the uploading docs will belong.
             items: validated UploadCollection.
             requestUsage: Bool, return usage information.
 
@@ -95,7 +105,7 @@ class ContentUploadAPI:
         for batch_num, batch in enumerate(
             [items[i : i + 1000] for i in range(0, len(items), 1000)]
         ):
-            response = self.upload(batch)
+            response = self.upload(content_type_id, batch, request_usage)
             logger.info(f"Uploaded batch number: {batch_num}")
             batch_responses[f"Batch {batch_num}"] = response
         return batch_responses
