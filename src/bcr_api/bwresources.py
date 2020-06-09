@@ -274,7 +274,7 @@ class BWQueries(BWResource, bwdata.BWData):
             contentSources: Optional, defaults to same sources in UI
             description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
             languages: Optional, pass in no arguments to make the query language agnostic
-            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            samplePercentage: Optional, defaults to 100 (percent)
             query_type: Optional, defaults to 'monitor'
 
         Raises:
@@ -296,7 +296,7 @@ class BWQueries(BWResource, bwdata.BWData):
             contentSources: Optional, defaults to same sources in UI
             description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
             languages: Optional, pass in no arguments to make the query language agnostic
-            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            samplePercentage: Optional, defaults to 100 (percent)
             query_type: Optional, defaults to 'monitor'
 
         Raises:
@@ -476,7 +476,7 @@ class BWQueries(BWResource, bwdata.BWData):
         # params with default values
         filled["type"] = data.get("query_type", "monitor")
         filled["contentSources"] = data.get("contentSources", default_content_sources)
-        filled["monitorSamplePercentage"] = data.get("monitorSamplePercentage", 100)
+        filled["samplePercentage"] = data.get("samplePercentage", 100)
         filled["description"] = data.get("description", "")
         # languages field defaults to an empty list to create a language agnostic query
         filled["languages"] = data.get("languages", list())
