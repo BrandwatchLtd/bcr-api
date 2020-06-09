@@ -14,9 +14,14 @@ coverage = "*"
 pydocstyle = "*"
 better-exceptions = "*"
 jupyterlab = "*"
-black = "==19.3b0"
+black = "*"
 pytest-cov = "*"
 pytest-sugar = "*"
+mypy = "*"
+isort = "*"
 
 [packages]
 bcr-api = {editable = true,path = "."}
+
+[pipenv]
+allow_prereleases = true

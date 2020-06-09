@@ -1,6 +1,13 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-requirements = ["requests>=2.22.0"]
+requirements = [
+    "requests>=2.22.0",
+    "pandas>=0.20.3",
+    "openpyxl>=2.4.8",
+    "pendulum>=1.3.2",
+    "pydantic[email]>=1.0",
+    "ftfy>=5.5.1",
+]
 
 setup_requirements = ["pytest-runner", "setuptools>=38.6.0", "wheel>=0.31.0"]
 
