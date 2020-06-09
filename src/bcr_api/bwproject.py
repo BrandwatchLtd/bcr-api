@@ -122,14 +122,14 @@ class BWUser:
         Checks a query search to see if it contains errors.  Same query debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the query.
+            booleanQuery: Search terms included in the query.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
-            raise KeyError("Must pass: query = 'search terms'")
+        if "booleanQuery" not in kwargs:
+            raise KeyError("Must pass: booleanQuery = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
@@ -143,14 +143,14 @@ class BWUser:
         Checks a rule search to see if it contains errors.  Same rule debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the rule.
+            booleanQuery: Search terms included in the rule.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
-            raise KeyError("Must pass: query = 'search terms'")
+        if "booleanQuery" not in kwargs:
+            raise KeyError("Must pass: booleanQuery = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
