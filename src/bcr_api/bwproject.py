@@ -5,6 +5,7 @@ bwproject contains the BWUser and BWProject classes
 import requests
 import time
 import logging
+import json
 
 from .credentials import CredentialsStore
 
@@ -134,7 +135,7 @@ class BWUser:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(
-            verb=requests.post, address="query-validation", params=kwargs
+            verb=requests.post, address="query-validation", data=json.dumps(kwargs)
         )
         return valid_search
 
