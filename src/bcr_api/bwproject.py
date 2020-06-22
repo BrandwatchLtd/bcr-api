@@ -5,6 +5,7 @@ bwproject contains the BWUser and BWProject classes
 import requests
 import time
 import logging
+import json
 
 from .credentials import CredentialsStore
 
@@ -87,14 +88,16 @@ class BWUser:
         else:
             raise KeyError("Could not validate provided token", user)
 
-    def _get_auth(self, username, password, token_path, grant_type, client_id, client_secret):
+    def _get_auth(
+        self, username, password, token_path, grant_type, client_id, client_secret
+    ):
         token = requests.post(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
                 "grant_type": grant_type,
                 "client_id": client_id,
-                "client_secret":client_secret,
+                "client_secret": client_secret,
             },
             data={"password": password},
         ).json()
@@ -122,19 +125,19 @@ class BWUser:
         Checks a query search to see if it contains errors.  Same query debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the query.
+            booleanQuery: Search terms included in the query.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
-            raise KeyError("Must pass: query = 'search terms'")
+        if "booleanQuery" not in kwargs:
+            raise KeyError("Must pass: booleanQuery = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(
-            verb=requests.get, address="query-validation", params=kwargs
+            verb=requests.post, address="query-validation", data=json.dumps(kwargs)
         )
         return valid_search
 
@@ -143,14 +146,14 @@ class BWUser:
         Checks a rule search to see if it contains errors.  Same rule debugging as used in the front end.
 
         Keyword Args:
-            query: Search terms included in the rule.
+            booleanQuery: Search terms included in the rule.
             language: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
-        if "query" not in kwargs:
-            raise KeyError("Must pass: query = 'search terms'")
+        if "booleanQuery" not in kwargs:
+            raise KeyError("Must pass: booleanQuery = 'search terms'")
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
