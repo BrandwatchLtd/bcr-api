@@ -88,14 +88,16 @@ class BWUser:
         else:
             raise KeyError("Could not validate provided token", user)
 
-    def _get_auth(self, username, password, token_path, grant_type, client_id, client_secret):
+    def _get_auth(
+        self, username, password, token_path, grant_type, client_id, client_secret
+    ):
         token = requests.post(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
                 "grant_type": grant_type,
                 "client_id": client_id,
-                "client_secret":client_secret,
+                "client_secret": client_secret,
             },
             data={"password": password},
         ).json()

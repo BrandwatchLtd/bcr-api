@@ -490,7 +490,7 @@ class BWQueries(BWResource, bwdata.BWData):
 
         # validating the query search - comment this out to skip validation
         self.project.validate_query_search(
-            booleanQuery=filled["booleanQuery"], language=['en']
+            booleanQuery=filled["booleanQuery"], language=["en"]
         )
         return json.dumps(filled)
 
