@@ -1513,10 +1513,10 @@ class BWRules(BWResource):
         filled["ruleAction"] = data["ruleAction"]
         filled["projectId"] = self.project.project_id
 
-        # validating the query search - comment this out to skip validation
+        # validating the query search
         if "search" in filled["filter"]:
             self.project.validate_rule_search(
-                query=filled["filter"]["search"], language="en"
+                booleanQuery=filled["filter"]["search"], language="en"
             )
 
         if "scope" in data:
