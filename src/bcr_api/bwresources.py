@@ -478,8 +478,8 @@ class BWQueries(BWResource, bwdata.BWData):
         filled["contentSources"] = data.get("contentSources", default_content_sources)
         filled["samplePercentage"] = data.get("samplePercentage", 100)
         # set userRequestedSampling to True if the sample rate < 100, otherwise field is not needed
-        if filled['samplePercentage'] < 100:
-            filled['userRequestedSampling'] = True
+        if filled["samplePercentage"] < 100:
+            filled["userRequestedSampling"] = True
         filled["description"] = data.get("description", "")
         # languages field defaults to an empty list to create a language agnostic query
         filled["languages"] = data.get("languages", list())
