@@ -6,7 +6,8 @@ params = {
     "exactAuthor": str,
     "xexactAuthor": str,
     "authorGroup": list,  # user passes in a string which gets converted to a list of ids
-    "xauthorGroup": list,  # user passes in a string which gets converted to a list of ids
+    "xauthorGroup": list,  # user passes in a string which gets converted to a list of ids,
+    "blacklistTopics": str,
     "category": list,
     # user passes in a dictionary {parent:[child1, child2, etc]} which gets converted to a list of ids
     "xcategory": list,
