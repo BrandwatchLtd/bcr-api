@@ -66,6 +66,7 @@ class BWData:
         """
         params = self._fill_params(name, startDate, kwargs)
         page_size = kwargs["pageSize"] if "pageSize" in kwargs else 5000
+        __delay = kwargs["__delay"] if "__delay" in kwargs else 30
         params["pageSize"] = page_size
         cursor = params.get("cursor", None)
         page_idx = 0
@@ -77,21 +78,27 @@ class BWData:
                 break
             else:
                 page_idx += 1
-            next_cursor, next_mentions = self._get_mentions_page(params)
-            if len(next_mentions) > 0:
-                cursor = next_cursor
-                logger.info(
-                    "Mentions page {} of {} {} retrieved".format(
-                        page_idx, self.resource_type, name
+            try:
+                next_cursor, next_mentions = self._get_mentions_page(params)
+                if len(next_mentions) > 0:
+                    cursor = next_cursor
+                    logger.info(
+                        "Mentions page {} of {} {} retrieved".format(
+                            page_idx, self.resource_type, name
+                        )
                     )
-                )
-                if iter_by_page:
-                    yield next_mentions
-                else:
-                    for mention in next_mentions:
-                        yield mention
-            if len(next_mentions) < page_size or not next_cursor:
-                break
+                    if iter_by_page:
+                        yield next_mentions
+                    else:
+                        for mention in next_mentions:
+                            yield mention
+                if len(next_mentions) < page_size or not next_cursor:
+                    break
+            except Exception as e:
+                if "results" in str(e):
+                    logger.info("Rate limit exceeded, please wait "+str(__delay)+"s ...")
+                page_idx -= 1
+                time.sleep(__delay)
 
     def num_mentions(self, name=None, startDate=None, **kwargs):
         """
