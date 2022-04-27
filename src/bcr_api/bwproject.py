@@ -99,7 +99,8 @@ class BWUser:
                 "client_id": client_id,
                 "client_secret": client_secret,
             },
-            data={"password": password},
+            data={"password": password,},
+            timeout=120
         ).json()
         if "access_token" in token:
             return username, token["access_token"]
@@ -162,7 +163,7 @@ class BWUser:
         )
         return valid_search
 
-    def request(self, verb, address, params={}, data={}):
+    def request(self, verb, address, params=None, data=None):
         """
         Makes a request to the Brandwatch API.
 
@@ -185,7 +186,7 @@ class BWUser:
         )
 
     def bare_request(
-        self, verb, address_root, address_suffix, access_token="", params={}, data={}
+        self, verb, address_root, address_suffix, access_token="", params=None, data=None
     ):
         """
         Makes a request to the Brandwatch API.
@@ -207,29 +208,26 @@ class BWUser:
 
         if access_token:
             headers["Authorization"] = "Bearer {}".format(access_token)
-        if data == {}:
+        if not data:
             response = verb(
-                address_root + address_suffix, params=params, headers=headers
+                address_root + address_suffix, params=params or {}, headers=headers, timeout=120
             )
         else:
             headers["Content-type"] = "application/json"
             response = verb(
-                address_root + address_suffix, params=params, data=data, headers=headers
+                address_root + address_suffix, params=params or {}, data=data, headers=headers, timeout=120
             )
 
         try:
             response.json()
-        except ValueError as e:
+        except json.JSONDecodeError as e:
             # handles non-json responses (e.g. HTTP 404, 500, 502, 503, 504)
-            if "Expecting value: line 1 column 1 (char 0)" in str(e):
-                logger.error(
-                    "There was an error with this request: \n{}\n{}\n{}".format(
-                        response.url, data, response.text
-                    )
+            logger.error(
+                "There was an error with this request: \n{}\n{}\n{}".format(
+                    response.url, data, response.text
                 )
-                raise RuntimeError(response.text)
-            else:
-                raise
+            )
+            raise RuntimeError(response.text)
         else:
             if "errors" in response.json() and response.json()["errors"]:
                 logger.error(
@@ -289,6 +287,10 @@ class BWProject(BWUser):
         self.project_id = -1
         self.project_address = ""
         self.get_project(project)
+        self.queries = None
+        self.tags = None
+        self.categories = None
+        self.rules = None
 
     def get_project(self, project):
         """
@@ -324,7 +326,7 @@ class BWProject(BWUser):
         if not project_found:
             raise KeyError("Project " + str(project) + " not found")
 
-    def get(self, endpoint, params={}):
+    def get(self, endpoint, params=None):
         """
         Makes a project level GET request
 
@@ -339,7 +341,7 @@ class BWProject(BWUser):
             verb=requests.get, address=self.project_address + endpoint, params=params
         )
 
-    def delete(self, endpoint, params={}):
+    def delete(self, endpoint, params=None):
         """
         Makes a project level DELETE request
 
@@ -354,7 +356,7 @@ class BWProject(BWUser):
             verb=requests.delete, address=self.project_address + endpoint, params=params
         )
 
-    def post(self, endpoint, params={}, data={}):
+    def post(self, endpoint, params=None, data=None):
         """
         Makes a project level POST request
 
@@ -373,7 +375,7 @@ class BWProject(BWUser):
             data=data,
         )
 
-    def put(self, endpoint, params={}, data={}):
+    def put(self, endpoint, params=None, data=None):
         """
         Makes a project level PUT request
 
@@ -392,7 +394,7 @@ class BWProject(BWUser):
             data=data,
         )
 
-    def patch(self, endpoint, params={}, data={}):
+    def patch(self, endpoint, params=None, data=None):
         """
         Makes a project level PATCH request
 
