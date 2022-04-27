@@ -18,6 +18,7 @@ class AmbiguityError(ValueError):
 
 
 class BWResource:
+    resource_type = None
     """
     This class is a superclass for brandwatch resources (queries, groups, mentions, tags, sitelists, authorlists, locationlists and signals).
 
@@ -35,7 +36,10 @@ class BWResource:
         """
         self.project = bwproject
         self.names = {}
+        self.raw_resources = {}
         self.reload()
+        if self.resource_type:
+            setattr(self.project, self.resource_type, self)
 
     def reload(self):
         """
@@ -52,6 +56,10 @@ class BWResource:
 
         if "results" not in response:
             raise KeyError("Could not retrieve" + self.resource_type, response)
+
+        self.raw_resources = {
+            resource["id"]: resource for resource in response["results"]
+        }
 
         self.names = {
             resource["id"]: resource["name"] for resource in response["results"]
@@ -237,6 +245,50 @@ class BWResource:
     def _fill_data():
         raise NotImplementedError
 
+    def get_resource(self, resource_type):
+        attribute_name = resource_type[2:].lower()
+        if hasattr(self.project, attribute_name) and getattr(self.project, attribute_name):
+            return getattr(self.project, attribute_name)
+        resource_class = globals().get(resource_type)
+        if issubclass(resource_class, BWResource) or resource_type == 'BWCategories':
+            return resource_class(self.project)
+
+    @property
+    def queries(self):
+        return self.get_resource('BWQueries')
+
+    @property
+    def tags(self):
+        return self.get_resource('BWTags')
+
+    @property
+    def categories(self):
+        return self.get_resource('BWCategories')
+
+    @property
+    def rules(self):
+        return self.get_resource('BWRules')
+
+    @property
+    def groups(self):
+        return self.get_resource('BWGroups')
+
+    @property
+    def authorlists(self):
+        return self.get_resource('BWAuthorLists')
+
+    @property
+    def sitelists(self):
+        return self.get_resource('BWSiteLists')
+
+    @property
+    def locationlists(self):
+        return self.get_resource('BWLocationLists')
+
+    @property
+    def signals(self):
+        return self.get_resource('BWSignals')
+
 
 class BWQueries(BWResource, bwdata.BWData):
     """
@@ -251,17 +303,6 @@ class BWQueries(BWResource, bwdata.BWData):
     specific_endpoint = "queries"
     resource_type = "queries"
     resource_id_name = "queryId"
-
-    def __init__(self, bwproject):
-        """
-        Creates a BWQueries object.
-
-        Args:
-            bwproject:  Brandwatch project.  This is a BWProject object.
-        """
-        super(BWQueries, self).__init__(bwproject)
-        self.tags = BWTags(self.project)
-        self.categories = BWCategories(self.project)
 
     def upload(self, create_only=False, modify_only=False, **kwargs):
         """
@@ -408,7 +449,7 @@ class BWQueries(BWResource, bwdata.BWData):
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
+            authorlists = self.authorlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -422,7 +463,7 @@ class BWQueries(BWResource, bwdata.BWData):
             "authorLocationGroup",
             "xauthorLocationGroup",
         ]:
-            locationlists = BWLocationLists(self.project)
+            locationlists = self.locationlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -431,7 +472,7 @@ class BWQueries(BWResource, bwdata.BWData):
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
+            sitelists = self.sitelists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -529,19 +570,6 @@ class BWGroups(BWResource, bwdata.BWData):
     resource_type = "groups"
     resource_id_name = "queryGroupId"
 
-    def __init__(self, bwproject):
-        """
-        Creates a BWGroups object.
-
-        Args:
-            bwproject:  Brandwatch project.  This is a BWProject object.
-        """
-
-        super(BWGroups, self).__init__(bwproject)
-        self.queries = BWQueries(self.project)
-        self.tags = self.queries.tags
-        self.categories = self.queries.categories
-
     def rename(self, name, new_name):
         """
         Renames an existing resource.
@@ -597,7 +625,7 @@ class BWGroups(BWResource, bwdata.BWData):
             name:   Name of the group that you'd like to delete.
         """
         # No need to delete the group itself, since a group will be deleted automatically when empty
-        BWQueries(self.project).delete_all(self.get_group_queries(name))
+        self.queries.delete_all(self.get_group_queries(name))
         logger.info("Group {} deleted".format(name))
 
     def get_group_queries(self, name):
@@ -658,7 +686,7 @@ class BWGroups(BWResource, bwdata.BWData):
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
+            authorlists = self.authorlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -672,7 +700,7 @@ class BWGroups(BWResource, bwdata.BWData):
             "authorLocationGroup",
             "xauthorLocationGroup",
         ]:
-            locationlists = BWLocationLists(self.project)
+            locationlists = self.locationlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -681,7 +709,7 @@ class BWGroups(BWResource, bwdata.BWData):
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
+            sitelists = self.sitelists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -746,8 +774,9 @@ class BWMentions:
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        self.tags = BWTags(self.project)
-        self.categories = BWCategories(self.project)
+        self.tags = self.project.tags or BWTags(self.project)
+        self.categories = self.project.categories or BWCategories(self.project)
+        self.project.mentions = self
 
     def patch_mentions(self, mentions, action, setting):
         """
@@ -989,8 +1018,8 @@ class BWTags(BWResource):
     This class provides an interface for Tag operations within a prescribed project.
     """
 
-    general_endpoint = "tags"
-    specific_endpoint = "tags"
+    general_endpoint = "ruletags"
+    specific_endpoint = "ruletags"
     resource_type = "tags"
 
     def clear_all_in_project(self):
@@ -1008,6 +1037,12 @@ class BWTags(BWResource):
             filled["name"] = data["new_name"]
         else:
             filled["name"] = data["name"]
+
+        if 'rules' in data:
+            rules = []
+            for rule in data['rules']:
+                rules.append(self.rules.fill_subrule_data(rule))
+            filled['rules'] = rules
 
         return json.dumps(filled)
 
@@ -1033,7 +1068,9 @@ class BWCategories:
         """
         self.project = bwproject
         self.ids = {}
+        self.raw_resources = {}
         self.reload()
+        self.project.categories = self
 
     def reload(self):
         """
@@ -1046,7 +1083,7 @@ class BWCategories:
         Raises:
             KeyError: If there was an error with the request for category information.
         """
-        response = self.project.get(endpoint="categories")
+        response = self.project.get(endpoint="rulecategories")
 
         if "results" not in response:
             raise KeyError("Could not retrieve categories", response)
@@ -1062,6 +1099,9 @@ class BWCategories:
                     "multiple": cat["multiple"],
                     "children": children,
                 }
+            self.raw_resources = {
+                resource["id"]: resource for resource in response["results"]
+            }
 
     def upload(
         self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
@@ -1128,13 +1168,13 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                 elif "new_name" in data:
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                     name = data["new_name"]
@@ -1142,6 +1182,85 @@ class BWCategories:
             elif name not in self.ids and not modify_only:
                 filled_data = self._fill_data(data)
                 self.project.post(endpoint="categories", data=filled_data)
+            else:
+                continue
+
+        self.reload()
+        cat_data = {}
+        for data in data_list:
+            if "new_name" in data:
+                name = data["new_name"]
+            else:
+                name = data["name"]
+            if name in self.ids:
+                cat_data[name] = self.ids[name]
+        return cat_data
+
+    def upload_rule_categories(
+            self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
+    ):
+        """
+        Uploads a category.
+
+        You can upload a new category, add subcategories to an existing category, overwrite the subcategories of an existing category, or change the name of an existing category with this function.
+
+        Args:
+            create_only:        If True and the category already exists, no action will be triggered - Optional.  Defaults to False.
+            modify_only:        If True and the category does not exist, no action will be triggered - Optional.  Defaults to False.
+            overwrite_children: Boolen flag that indicates if existing subcategories should be appended or overwriten - Optional.  Defaults to False (appending new subcategories).
+            kwargs:             You must pass in name (parent category name) and children (dict of subcategories).  You can optionally pass in multiple (boolean - indicates if subcategories are mutually exclusive) and/or new_name (string) if you would like to change the name of an existing category.
+
+        Returns:
+            A dictionary of the form {id: categoryid, multiple: True/False, children: {child1name: child1id, ...}}
+        """
+        data_list = [kwargs]
+        for data in data_list:
+            if "name" not in data:
+                raise KeyError("Need name to upload " + self.parameter, data)
+            elif not data.get('children'):
+                raise KeyError("Need children to upload categories", data)
+            else:
+                name = data["name"]
+
+            validated_children = []
+            for child in data['children']:
+                rules = []
+                if child.get('rules', []):
+                    for rule in child['rules']:
+                        rules.append(self.rules.fill_subrule_data(rule))
+                child['rules'] = rules
+                validated_children.append(child)
+            data['children'] = validated_children
+
+            if name in self.ids and not create_only:
+                new_children = []
+                existing_children = self.raw_resources[self.ids[name]['id']]['children']
+                for child in data['children']:
+                    if child['name'] not in self.ids[name]['children']:
+                        rules = []
+                        if child.get('rules', []):
+                            for rule in child['rules']:
+                                rules.append(self.rules.fill_subrule_data(rule))
+                        child['rules'] = rules
+                        new_children.append(child)
+
+                if new_children or overwrite_children:
+                    if not overwrite_children:
+                        # add the new children to the existing children
+                        data["children"] = existing_children + data['children']
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                elif "new_name" in data:
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                    name = data["new_name"]
+
+            elif name not in self.ids and not modify_only:
+                self.project.post(endpoint="rulecategories", data=json.dumps(data))
             else:
                 continue
 
@@ -1220,7 +1339,7 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
         self.reload()
@@ -1258,6 +1377,18 @@ class BWCategories:
             filled["children"].append({"name": child, "id": child_id})
         return json.dumps(filled)
 
+    def get_resource(self, resource_type):
+        attribute_name = resource_type[2:].lower()
+        if hasattr(self.project, attribute_name) and getattr(self.project, attribute_name):
+            return getattr(self.project, attribute_name)
+        resource_class = globals().get(resource_type)
+        if issubclass(resource_class, BWResource):
+            return resource_class(self.project)
+
+    @property
+    def rules(self):
+        return self.get_resource('BWRules')
+
 
 class BWRules(BWResource):
     """
@@ -1272,19 +1403,6 @@ class BWRules(BWResource):
     general_endpoint = "rules"
     specific_endpoint = "rules"
     resource_type = "rules"
-
-    def __init__(self, bwproject):
-        """
-        Creates a BWRules object.
-
-        Args:
-            bwproject:  Brandwatch project.  This is a BWProject object.
-        """
-        super(BWRules, self).__init__(bwproject)
-        # store queries, tags and cats as a rule attribute so you don't have to reload a million times
-        self.queries = BWQueries(self.project)
-        self.tags = self.queries.tags
-        self.categories = self.queries.categories
 
     def upload_all(self, data_list, create_only=False, modify_only=False):
         """
@@ -1528,6 +1646,16 @@ class BWRules(BWResource):
 
         return json.dumps(filled)
 
+    def fill_subrule_data(self, data):
+        filled = {}
+        filled["filter"] = data["filter"] if ("filter" in data) else {}
+        # validating the query search
+        if "search" in filled["filter"]:
+            self.project.validate_rule_search(
+                booleanQuery=filled["filter"]["search"], language="en"
+            )
+        return filled
+
     def _name_to_id(self, attribute, setting):
         if isinstance(setting, int):
             return setting
@@ -1570,7 +1698,7 @@ class BWRules(BWResource):
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
+            authorlists = self.authorlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -1584,7 +1712,7 @@ class BWRules(BWResource):
             "authorLocationGroup",
             "xauthorLocationGroup",
         ]:
-            locationlists = BWLocationLists(self.project)
+            locationlists = self.locationlists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -1593,7 +1721,7 @@ class BWRules(BWResource):
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
+            sitelists = self.sitelists
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -1655,28 +1783,28 @@ class BWRules(BWResource):
                         return category
 
         elif attribute == "authorGroup" or attribute == "xauthorGroup":
-            resource_obj = BWAuthorLists(self.project)
+            resource_obj = self.authorlists
             for resource_id, resource_name in resource_obj.names.items():
                 for aulist in setting:
                     if resource_id == aulist:
                         return resource_name
 
         elif attribute == "locationGroup" or attribute == "xlocationGroup":
-            resource_obj = BWLocationLists(self.project)
+            resource_obj = self.locationlists
             for resource_id, resource_name in resource_obj.names.items():
                 for aulist in setting:
                     if resource_id == aulist:
                         return resource_name
 
         elif attribute == "authorLocationGroup" or attribute == "xauthorLocationGroup":
-            resource_obj = BWLocationLists(self.project)
+            resource_obj = self.locationlists
             for resource_id, resource_name in resource_obj.names.items():
                 for aulist in setting:
                     if resource_id == aulist:
                         return resource_name
 
         elif attribute == "siteGroup" or attribute == "xsiteGroup":
-            resource_obj = BWSiteLists(self.project)
+            resource_obj = self.sitelists
             for resource_id, resource_name in resource_obj.names.items():
                 for aulist in setting:
                     if resource_id == aulist:
@@ -1699,18 +1827,6 @@ class BWSignals(BWResource):
     general_endpoint = "signals/groups"
     specific_endpoint = "signals/groups"
     resource_type = "signals"
-
-    def __init__(self, bwproject):
-        """
-        Creates a BWSignals object.
-
-        Args:
-            bwproject:  Brandwatch project.  This is a BWProject object.
-        """
-        super(BWSignals, self).__init__(bwproject)
-        self.queries = BWQueries(self.project)
-        self.tags = self.queries.tags
-        self.categories = self.queries.categories
 
     def rename(self, name, new_name):
         """

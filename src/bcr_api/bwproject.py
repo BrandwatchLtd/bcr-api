@@ -291,6 +291,11 @@ class BWProject(BWUser):
         self.tags = None
         self.categories = None
         self.rules = None
+        self.groups = None
+        self.authorlists = None
+        self.sitelists = None
+        self.locationlists = None
+        self.signals = None
 
     def get_project(self, project):
         """
