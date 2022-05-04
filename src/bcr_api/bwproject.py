@@ -229,16 +229,19 @@ class BWUser:
             )
             raise RuntimeError(response.text)
         else:
-            if "errors" in response.json() and response.json()["errors"]:
+            json_response = response.json()
+            if isinstance(json_response, str):
+                raise RuntimeError(json_response)
+            elif "errors" in json_response and json_response["errors"]:
                 logger.error(
                     "There was an error with this request: \n{}\n{}\n{}".format(
-                        response.url, data, response.json()["errors"]
+                        response.url, data, json_response["errors"]
                     )
                 )
-                raise RuntimeError(response.json()["errors"])
+                raise RuntimeError(json_response["errors"])
 
         logger.debug(response.url)
-        return response.json()
+        return json_response
 
 
 class BWProject(BWUser):

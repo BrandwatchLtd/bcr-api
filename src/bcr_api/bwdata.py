@@ -2,6 +2,7 @@
 bwdata contains the BWData class.
 """
 import datetime
+from time import sleep
 from . import filters
 import logging
 
@@ -69,6 +70,7 @@ class BWData:
         params["pageSize"] = page_size
         cursor = params.get("cursor", None)
         page_idx = 0
+        retries = kwargs.get('retries', 3)
 
         while True:
             if cursor:
@@ -77,19 +79,25 @@ class BWData:
                 break
             else:
                 page_idx += 1
-            next_cursor, next_mentions = self._get_mentions_page(params)
-            if len(next_mentions) > 0:
-                cursor = next_cursor
-                logger.info(
-                    "Mentions page {} of {} {} retrieved".format(
-                        page_idx, self.resource_type, name
-                    )
-                )
-                if iter_by_page:
-                    yield next_mentions
-                else:
-                    for mention in next_mentions:
-                        yield mention
+            num_retries = 0
+            while num_retries < retries:
+                try:
+                    next_cursor, next_mentions = self._get_mentions_page(params)
+                    if len(next_mentions) > 0:
+                        cursor = next_cursor
+                        logger.info(
+                            "Mentions page {} of {} {} retrieved".format(
+                                page_idx, self.resource_type, name
+                            )
+                        )
+                        if iter_by_page:
+                            yield next_mentions
+                        else:
+                            for mention in next_mentions:
+                                yield mention
+                except Exception:
+                    num_retries += 1
+                    sleep(2**num_retries)
             if len(next_mentions) < page_size or not next_cursor:
                 break
 
@@ -992,7 +1000,6 @@ class BWData:
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
         if "errors" in mentions:
             raise KeyError("Mentions GET request failed", mentions)
-
         return mentions.get("nextCursor", None), mentions["results"]
 
     def _valid_input(self, param, setting):
