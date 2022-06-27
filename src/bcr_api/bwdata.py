@@ -95,6 +95,7 @@ class BWData:
                         else:
                             for mention in next_mentions:
                                 yield mention
+                        break
                 except Exception:
                     num_retries += 1
                     sleep(2**num_retries)
