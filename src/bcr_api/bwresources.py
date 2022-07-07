@@ -1062,6 +1062,9 @@ class BWCategories:
                     "multiple": cat["multiple"],
                     "children": children,
                 }
+            self.raw_resources = {
+                resource["id"]: resource for resource in response["results"]
+            }
 
     def upload(
         self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
@@ -1155,7 +1158,93 @@ class BWCategories:
             if name in self.ids:
                 cat_data[name] = self.ids[name]
         return cat_data
+    
+    def upload_rule_categories(
+        self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
+    ):
+        """
+        Uploads a category.
+        You can upload a new category, add subcategories to an existing category, overwrite the subcategories of an existing category, or change the name of an existing category with this function.
+        Args:
+            create_only:        If True and the category already exists, no action will be triggered - Optional.  Defaults to False.
+            modify_only:        If True and the category does not exist, no action will be triggered - Optional.  Defaults to False.
+            overwrite_children: Boolen flag that indicates if existing subcategories should be appended or overwriten - Optional.  Defaults to False (appending new subcategories).
+            kwargs:             You must pass in name (parent category name) and children (dict of subcategories).  You can optionally pass in multiple (boolean - indicates if subcategories are mutually exclusive) and/or new_name (string) if you would like to change the name of an existing category.
+        Returns:
+            A dictionary of the form {id: categoryid, multiple: True/False, children: {child1name: child1id, ...}}
+        """
+        data_list = [kwargs]
+        for data in data_list:
+            if "name" not in data:
+                raise KeyError("Need name to upload " + self.parameter, data)
+            elif not data.get("children"):
+                raise KeyError("Need children to upload categories", data)
+            else:
+                name = data["name"]
 
+            validated_children = []
+            for child in data["children"]:
+                rules = []
+                if child.get("rules", []):
+                    for rule in child["rules"]:
+                        rules.append(self._fill_subrule_data(rule))
+                child["rules"] = rules
+                validated_children.append(child)
+            data["children"] = validated_children
+
+            if name in self.ids and not create_only:
+                new_children = []
+                existing_children = self.raw_resources[self.ids[name]["id"]]["children"]
+                for child in data["children"]:
+                    if child["name"] not in self.ids[name]["children"]:
+                        rules = []
+                        if child.get("rules", []):
+                            for rule in child["rules"]:
+                                rules.append(self._fill_subrule_data(rule))
+                        child["rules"] = rules
+                        new_children.append(child)
+
+                if new_children or overwrite_children:
+                    if not overwrite_children:
+                        # add the new children to the existing children
+                        data["children"] = existing_children + data["children"]
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                elif "new_name" in data:
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                    name = data["new_name"]
+
+            elif name not in self.ids and not modify_only:
+                self.project.post(endpoint="rulecategories", data=json.dumps(data))
+            else:
+                continue
+
+        self.reload()
+        cat_data = {}
+        for data in data_list:
+            if "new_name" in data:
+                name = data["new_name"]
+            else:
+                name = data["name"]
+            if name in self.ids:
+                cat_data[name] = self.ids[name]
+        return cat_data
+    
+    def _fill_subrule_data(self, data):
+        filled = {}
+        filled["filter"] = data["filter"] if ("filter" in data) else {}
+        # validating the rule search
+        if "search" in filled["filter"]:
+            self.project.validate_rule_search(
+                booleanQuery=filled["filter"]["search"], language="en"
+            )
+        return filled
+    
     def rename(self, name, new_name):
         """
         Renames an existing category.
