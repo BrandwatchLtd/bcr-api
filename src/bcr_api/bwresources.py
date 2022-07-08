@@ -35,6 +35,7 @@ class BWResource:
         """
         self.project = bwproject
         self.names = {}
+        self.raw_resources = {}
         self.reload()
 
     def reload(self):
@@ -53,6 +54,10 @@ class BWResource:
         if "results" not in response:
             raise KeyError("Could not retrieve" + self.resource_type, response)
 
+        self.raw_resources = {
+            resource["id"]: resource for resource in response["results"]
+        }
+        
         self.names = {
             resource["id"]: resource["name"] for resource in response["results"]
         }
@@ -236,6 +241,16 @@ class BWResource:
 
     def _fill_data():
         raise NotImplementedError
+        
+    def _fill_subrule_data(self, data):
+        filled = {}
+        filled["filter"] = data["filter"] if ("filter" in data) else {}
+        # validating the query search
+        if "search" in filled["filter"]:
+            self.project.validate_rule_search(
+                booleanQuery=filled["filter"]["search"], language="en"
+            )
+        return filled
 
 
 class BWQueries(BWResource, bwdata.BWData):
@@ -989,8 +1004,8 @@ class BWTags(BWResource):
     This class provides an interface for Tag operations within a prescribed project.
     """
 
-    general_endpoint = "tags"
-    specific_endpoint = "tags"
+    general_endpoint = "ruletags"
+    specific_endpoint = "ruletags"
     resource_type = "tags"
 
     def clear_all_in_project(self):
@@ -1008,6 +1023,12 @@ class BWTags(BWResource):
             filled["name"] = data["new_name"]
         else:
             filled["name"] = data["name"]
+            
+        if "rules" in data:
+            rules = []
+            for rule in data["rules"]:
+                rules.append(self._fill_subrule_data(rule))
+            filled["rules"] = rules
 
         return json.dumps(filled)
 
