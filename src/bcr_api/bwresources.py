@@ -1462,7 +1462,7 @@ class BWRules(BWResource):
 
         Args:
             action:     Action to be taken by the rule.  See the list "mutable" in filters.py for a full list of options.
-            setting:    Setting for the action.  E.g. If action is addCategories or removeCategories: setting = {parent:[child]}.
+            setting:    Setting for the action, e.g. if the action is "priority", you might want to choose "high".
 
         Raises:
             KeyError:   If the action input is invalid.
