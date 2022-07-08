@@ -1067,7 +1067,7 @@ class BWCategories:
         Raises:
             KeyError: If there was an error with the request for category information.
         """
-        response = self.project.get(endpoint="categories")
+        response = self.project.get(endpoint="rulecategories")
 
         if "results" not in response:
             raise KeyError("Could not retrieve categories", response)
@@ -1152,20 +1152,20 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                 elif "new_name" in data:
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                     name = data["new_name"]
 
             elif name not in self.ids and not modify_only:
                 filled_data = self._fill_data(data)
-                self.project.post(endpoint="categories", data=filled_data)
+                self.project.post(endpoint="rulecategories", data=filled_data)
             else:
                 continue
 
@@ -1310,7 +1310,7 @@ class BWCategories:
             if isinstance(item, str):
                 if item in self.ids:
                     self.project.delete(
-                        endpoint="categories/" + str(self.ids[item]["id"])
+                        endpoint="rulecategories/" + str(self.ids[item]["id"])
                     )
             elif isinstance(item, dict):
                 if item["name"] in self.ids:
@@ -1330,7 +1330,7 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
         self.reload()
