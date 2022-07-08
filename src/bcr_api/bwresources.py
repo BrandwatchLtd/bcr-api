@@ -1471,7 +1471,9 @@ class BWRules(BWResource):
         Returns:
             A dictionary of the form {action: setting}
         """
+        segmentation_update_warning = "All functionality for rules acting on categories and tags will be removed from the BWRules class, and should use the BWCategories and BWTags classes instead. This reflects the API changes outlined here: developers.brandwatch.com/docs/retrieving-categories-2, developers.brandwatch.com/docs/retrieving-tags-2"
         if action in ["addCategories", "removeCategories"]:
+            raise DeprecationWarning(segmentation_update_warning)
             # the following loop is only one iteration
             for category in setting:
                 parent = category
@@ -1483,6 +1485,7 @@ class BWRules(BWResource):
                 setting.append(self.categories.ids[parent]["children"][child])
 
         elif action in ["addTag", "removeTag"]:
+            raise DeprecationWarning(segmentation_update_warning)
             for s in setting:
                 self.tags.upload(name=s, create_only=True)
 
