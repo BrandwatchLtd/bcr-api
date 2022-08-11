@@ -55,7 +55,13 @@ class StubBWProject:
                 "resultsPageSize": -1,
                 "results": [],
             },
-            "categories": {
+            "ruletags": {
+                "resultsTotal": -1,
+                "resultsPage": -1,
+                "resultsPageSize": -1,
+                "results": [],
+            },
+            "rulecategories": {
                 "resultsTotal": -1,
                 "resultsPage": -1,
                 "resultsPageSize": -1,
@@ -68,7 +74,7 @@ class StubBWProject:
 
     def get(self, endpoint, params={}):
         """get without the need for responses library to be used"""
-        if endpoint in ["queries", "tags", "categories"]:
+        if endpoint in ["queries", "tags", "ruletags", "rulecategories"]:
             return self.examples[endpoint]
         elif endpoint.startswith("queries/"):  # e.g. the call is for queries/query_id
             return self.examples["specific_query"]
