@@ -57,18 +57,15 @@ class BWResource:
         self.raw_resources = {
             resource["id"]: resource for resource in response["results"]
         }
-        
+
         self.names = {
             resource["id"]: resource["name"] for resource in response["results"]
         }
 
     def get_resource_id(self, resource=None):
-        """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)
-        """
+        """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)"""
         if not resource:
-            return (
-                ""
-            )  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
+            return ""  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
         if isinstance(resource, int):
             if resource not in self.names.keys():
                 raise KeyError(
@@ -241,7 +238,7 @@ class BWResource:
 
     def _fill_data():
         raise NotImplementedError
-        
+
     def _fill_subrule_data(self, data):
         filled = {}
         filled["filter"] = data["filter"] if ("filter" in data) else {}
@@ -815,7 +812,7 @@ class BWMentions:
         logger.info("{} mentions updated".format(len(response)))
 
     def _valid_patch_input(self, action, setting):
-        """ internal use """
+        """internal use"""
         if not isinstance(setting, filters.mutable[action]):
             return False
         if (
@@ -827,7 +824,7 @@ class BWMentions:
             return True
 
     def _fill_mention_data(self, **data):
-        """ internal use """
+        """internal use"""
         # pass in mention, filter_type, setting
         filled = {}
 
@@ -1009,7 +1006,7 @@ class BWTags(BWResource):
     resource_type = "tags"
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project."""
         self.delete_all(list(self.names))
 
     def _fill_data(self, data):
@@ -1023,7 +1020,7 @@ class BWTags(BWResource):
             filled["name"] = data["new_name"]
         else:
             filled["name"] = data["name"]
-            
+
         if "rules" in data:
             rules = []
             for rule in data["rules"]:
@@ -1179,7 +1176,7 @@ class BWCategories:
             if name in self.ids:
                 cat_data[name] = self.ids[name]
         return cat_data
-    
+
     def upload_rule_categories(
         self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
     ):
@@ -1255,7 +1252,7 @@ class BWCategories:
             if name in self.ids:
                 cat_data[name] = self.ids[name]
         return cat_data
-    
+
     def _fill_subrule_data(self, data):
         filled = {}
         filled["filter"] = data["filter"] if ("filter" in data) else {}
@@ -1265,7 +1262,7 @@ class BWCategories:
                 booleanQuery=filled["filter"]["search"], language="en"
             )
         return filled
-    
+
     def rename(self, name, new_name):
         """
         Renames an existing category.
@@ -1336,12 +1333,12 @@ class BWCategories:
         self.reload()
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL categories in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL categories in the project."""
         for cat in self.ids:
             self.delete(self.ids[cat]["id"])
 
     def _fill_data(self, data):
-        """ internal use """
+        """internal use"""
         filled = {}
 
         if "id" in data:
@@ -1546,7 +1543,7 @@ class BWRules(BWResource):
         return rule
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project."""
         for resource_id in self.names.keys():
             self.project.delete(endpoint="rules/" + str(resource_id))
         self.reload()
@@ -1601,7 +1598,7 @@ class BWRules(BWResource):
             return rules
 
     def _fill_data(self, data):
-        """ internal use """
+        """internal use"""
         filled = {}
         if ("name" not in data) or ("ruleAction" not in data):
             raise KeyError("Need name to and ruleAction to upload rule", data)
@@ -1718,7 +1715,7 @@ class BWRules(BWResource):
             return setting
 
     def _valid_action_input(self, action, setting):
-        """ internal use """
+        """internal use"""
         if not isinstance(setting, filters.mutable[action]):
             return False
         if (
@@ -1891,7 +1888,7 @@ class BWSignals(BWResource):
         return json.dumps(filled)
 
     def _name_to_id(self, attribute, setting):
-        """ internal use """
+        """internal use"""
         ids = []
         if attribute in ["includeCategoryIds", "excludeCategoryIds"]:
             for category in setting:

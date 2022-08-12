@@ -28,12 +28,12 @@ class CredentialsStore:
         self._credentials_path = Path(credentials_path)
 
     def __getitem__(self, username):
-        """ Get self[username] """
+        """Get self[username]"""
         user_tokens = self._read()
         return user_tokens[username.lower()]
 
     def __setitem__(self, username, token):
-        """ Set self[username] to access token. """
+        """Set self[username] to access token."""
         credentials = self._read()
         if username.lower() in credentials:
             if credentials[username.lower()] == token:
@@ -50,7 +50,7 @@ class CredentialsStore:
         self._write(credentials)
 
     def __delitem__(self, username):
-        """ Delete self[username]. """
+        """Delete self[username]."""
         credentials = self._read()
         if username.lower() in credentials:
             logger.info("Deleting access token for user: %s", username)
@@ -58,7 +58,7 @@ class CredentialsStore:
             self._write(credentials)
 
     def __iter__(self):
-        """ Implement iter(self). """
+        """Implement iter(self)."""
         credentials = self._read()
         yield from credentials.items()
 

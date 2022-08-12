@@ -104,8 +104,8 @@ class TestBWQueriesCreation(unittest.TestCase):
 
     def test_query_get_provide_id(self):
         """
-      this is the function that before the fix would return TypeError: must be str, not int
-      """
+        this is the function that before the fix would return TypeError: must be str, not int
+        """
         return self.queries.get(query_id)
 
     def test_query_id_get_equal(self):
@@ -115,8 +115,8 @@ class TestBWQueriesCreation(unittest.TestCase):
 
     def test_query_get_provide_None(self):
         """
-      can a user pass nothing into queries.get()
-      """
+        can a user pass nothing into queries.get()
+        """
         actual = self.queries.get()
         expected = self.project.examples["queries"]["results"][0]
         self.assertEqual(actual, expected)
