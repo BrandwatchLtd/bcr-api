@@ -117,7 +117,7 @@ class BWUser:
         return response["results"] if "results" in response else response
 
     def get_self(self):
-        """ Gets username and id """
+        """Gets username and id"""
         return self.request(verb=requests.get, address="me")
 
     def validate_query_search(self, **kwargs):

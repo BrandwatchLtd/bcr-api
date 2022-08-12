@@ -35,6 +35,7 @@ class BWResource:
         """
         self.project = bwproject
         self.names = {}
+        self.raw_resources = {}
         self.reload()
 
     def reload(self):
@@ -53,17 +54,18 @@ class BWResource:
         if "results" not in response:
             raise KeyError("Could not retrieve" + self.resource_type, response)
 
+        self.raw_resources = {
+            resource["id"]: resource for resource in response["results"]
+        }
+
         self.names = {
             resource["id"]: resource["name"] for resource in response["results"]
         }
 
     def get_resource_id(self, resource=None):
-        """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)
-        """
+        """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)"""
         if not resource:
-            return (
-                ""
-            )  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
+            return ""  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
         if isinstance(resource, int):
             if resource not in self.names.keys():
                 raise KeyError(
@@ -236,6 +238,16 @@ class BWResource:
 
     def _fill_data():
         raise NotImplementedError
+
+    def _fill_subrule_data(self, data):
+        filled = {}
+        filled["filter"] = data["filter"] if ("filter" in data) else {}
+        # validating the query search
+        if "search" in filled["filter"]:
+            self.project.validate_rule_search(
+                booleanQuery=filled["filter"]["search"], language="en"
+            )
+        return filled
 
 
 class BWQueries(BWResource, bwdata.BWData):
@@ -800,7 +812,7 @@ class BWMentions:
         logger.info("{} mentions updated".format(len(response)))
 
     def _valid_patch_input(self, action, setting):
-        """ internal use """
+        """internal use"""
         if not isinstance(setting, filters.mutable[action]):
             return False
         if (
@@ -812,7 +824,7 @@ class BWMentions:
             return True
 
     def _fill_mention_data(self, **data):
-        """ internal use """
+        """internal use"""
         # pass in mention, filter_type, setting
         filled = {}
 
@@ -989,12 +1001,12 @@ class BWTags(BWResource):
     This class provides an interface for Tag operations within a prescribed project.
     """
 
-    general_endpoint = "tags"
-    specific_endpoint = "tags"
+    general_endpoint = "ruletags"
+    specific_endpoint = "ruletags"
     resource_type = "tags"
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project."""
         self.delete_all(list(self.names))
 
     def _fill_data(self, data):
@@ -1008,6 +1020,12 @@ class BWTags(BWResource):
             filled["name"] = data["new_name"]
         else:
             filled["name"] = data["name"]
+
+        if "rules" in data:
+            rules = []
+            for rule in data["rules"]:
+                rules.append(self._fill_subrule_data(rule))
+            filled["rules"] = rules
 
         return json.dumps(filled)
 
@@ -1046,7 +1064,7 @@ class BWCategories:
         Raises:
             KeyError: If there was an error with the request for category information.
         """
-        response = self.project.get(endpoint="categories")
+        response = self.project.get(endpoint="rulecategories")
 
         if "results" not in response:
             raise KeyError("Could not retrieve categories", response)
@@ -1062,6 +1080,9 @@ class BWCategories:
                     "multiple": cat["multiple"],
                     "children": children,
                 }
+            self.raw_resources = {
+                resource["id"]: resource for resource in response["results"]
+            }
 
     def upload(
         self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
@@ -1128,20 +1149,20 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                 elif "new_name" in data:
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
                     name = data["new_name"]
 
             elif name not in self.ids and not modify_only:
                 filled_data = self._fill_data(data)
-                self.project.post(endpoint="categories", data=filled_data)
+                self.project.post(endpoint="rulecategories", data=filled_data)
             else:
                 continue
 
@@ -1155,6 +1176,92 @@ class BWCategories:
             if name in self.ids:
                 cat_data[name] = self.ids[name]
         return cat_data
+
+    def upload_rule_categories(
+        self, create_only=False, modify_only=False, overwrite_children=False, **kwargs
+    ):
+        """
+        Uploads a category.
+        You can upload a new category, add subcategories to an existing category, overwrite the subcategories of an existing category, or change the name of an existing category with this function.
+        Args:
+            create_only:        If True and the category already exists, no action will be triggered - Optional.  Defaults to False.
+            modify_only:        If True and the category does not exist, no action will be triggered - Optional.  Defaults to False.
+            overwrite_children: Boolen flag that indicates if existing subcategories should be appended or overwriten - Optional.  Defaults to False (appending new subcategories).
+            kwargs:             You must pass in name (parent category name) and children (dict of subcategories).  You can optionally pass in multiple (boolean - indicates if subcategories are mutually exclusive) and/or new_name (string) if you would like to change the name of an existing category.
+        Returns:
+            A dictionary of the form {id: categoryid, multiple: True/False, children: {child1name: child1id, ...}}
+        """
+        data_list = [kwargs]
+        for data in data_list:
+            if "name" not in data:
+                raise KeyError("Need name to upload " + self.parameter, data)
+            elif not data.get("children"):
+                raise KeyError("Need children to upload categories", data)
+            else:
+                name = data["name"]
+
+            validated_children = []
+            for child in data["children"]:
+                rules = []
+                if child.get("rules", []):
+                    for rule in child["rules"]:
+                        rules.append(self._fill_subrule_data(rule))
+                child["rules"] = rules
+                validated_children.append(child)
+            data["children"] = validated_children
+
+            if name in self.ids and not create_only:
+                new_children = []
+                existing_children = self.raw_resources[self.ids[name]["id"]]["children"]
+                for child in data["children"]:
+                    if child["name"] not in self.ids[name]["children"]:
+                        rules = []
+                        if child.get("rules", []):
+                            for rule in child["rules"]:
+                                rules.append(self._fill_subrule_data(rule))
+                        child["rules"] = rules
+                        new_children.append(child)
+
+                if new_children or overwrite_children:
+                    if not overwrite_children:
+                        # add the new children to the existing children
+                        data["children"] = existing_children + data["children"]
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                elif "new_name" in data:
+                    self.project.put(
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
+                        data=json.dumps(data),
+                    )
+                    name = data["new_name"]
+
+            elif name not in self.ids and not modify_only:
+                self.project.post(endpoint="rulecategories", data=json.dumps(data))
+            else:
+                continue
+
+        self.reload()
+        cat_data = {}
+        for data in data_list:
+            if "new_name" in data:
+                name = data["new_name"]
+            else:
+                name = data["name"]
+            if name in self.ids:
+                cat_data[name] = self.ids[name]
+        return cat_data
+
+    def _fill_subrule_data(self, data):
+        filled = {}
+        filled["filter"] = data["filter"] if ("filter" in data) else {}
+        # validating the rule search
+        if "search" in filled["filter"]:
+            self.project.validate_rule_search(
+                booleanQuery=filled["filter"]["search"], language="en"
+            )
+        return filled
 
     def rename(self, name, new_name):
         """
@@ -1200,7 +1307,7 @@ class BWCategories:
             if isinstance(item, str):
                 if item in self.ids:
                     self.project.delete(
-                        endpoint="categories/" + str(self.ids[item]["id"])
+                        endpoint="rulecategories/" + str(self.ids[item]["id"])
                     )
             elif isinstance(item, dict):
                 if item["name"] in self.ids:
@@ -1220,18 +1327,18 @@ class BWCategories:
 
                     filled_data = self._fill_data(data)
                     self.project.put(
-                        endpoint="categories/" + str(self.ids[name]["id"]),
+                        endpoint="rulecategories/" + str(self.ids[name]["id"]),
                         data=filled_data,
                     )
         self.reload()
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL categories in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL categories in the project."""
         for cat in self.ids:
             self.delete(self.ids[cat]["id"])
 
     def _fill_data(self, data):
-        """ internal use """
+        """internal use"""
         filled = {}
 
         if "id" in data:
@@ -1352,7 +1459,7 @@ class BWRules(BWResource):
 
         Args:
             action:     Action to be taken by the rule.  See the list "mutable" in filters.py for a full list of options.
-            setting:    Setting for the action.  E.g. If action is addCategories or removeCategories: setting = {parent:[child]}.
+            setting:    Setting for the action, e.g. if the action is "priority", you might want to choose "high".
 
         Raises:
             KeyError:   If the action input is invalid.
@@ -1361,7 +1468,9 @@ class BWRules(BWResource):
         Returns:
             A dictionary of the form {action: setting}
         """
+        segmentation_update_warning = "All functionality for rules acting on categories and tags will be removed from the BWRules class, and should use the BWCategories and BWTags classes instead. This reflects the API changes outlined here: developers.brandwatch.com/docs/retrieving-categories-2, developers.brandwatch.com/docs/retrieving-tags-2"
         if action in ["addCategories", "removeCategories"]:
+            raise DeprecationWarning(segmentation_update_warning)
             # the following loop is only one iteration
             for category in setting:
                 parent = category
@@ -1373,6 +1482,7 @@ class BWRules(BWResource):
                 setting.append(self.categories.ids[parent]["children"][child])
 
         elif action in ["addTag", "removeTag"]:
+            raise DeprecationWarning(segmentation_update_warning)
             for s in setting:
                 self.tags.upload(name=s, create_only=True)
 
@@ -1433,7 +1543,7 @@ class BWRules(BWResource):
         return rule
 
     def clear_all_in_project(self):
-        """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project. """
+        """WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project."""
         for resource_id in self.names.keys():
             self.project.delete(endpoint="rules/" + str(resource_id))
         self.reload()
@@ -1488,7 +1598,7 @@ class BWRules(BWResource):
             return rules
 
     def _fill_data(self, data):
-        """ internal use """
+        """internal use"""
         filled = {}
         if ("name" not in data) or ("ruleAction" not in data):
             raise KeyError("Need name to and ruleAction to upload rule", data)
@@ -1605,7 +1715,7 @@ class BWRules(BWResource):
             return setting
 
     def _valid_action_input(self, action, setting):
-        """ internal use """
+        """internal use"""
         if not isinstance(setting, filters.mutable[action]):
             return False
         if (
@@ -1778,7 +1888,7 @@ class BWSignals(BWResource):
         return json.dumps(filled)
 
     def _name_to_id(self, attribute, setting):
-        """ internal use """
+        """internal use"""
         ids = []
         if attribute in ["includeCategoryIds", "excludeCategoryIds"]:
             for category in setting:

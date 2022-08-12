@@ -55,7 +55,13 @@ class StubBWProject:
                 "resultsPageSize": -1,
                 "results": [],
             },
-            "categories": {
+            "ruletags": {
+                "resultsTotal": -1,
+                "resultsPage": -1,
+                "resultsPageSize": -1,
+                "results": [],
+            },
+            "rulecategories": {
                 "resultsTotal": -1,
                 "resultsPage": -1,
                 "resultsPageSize": -1,
@@ -68,7 +74,7 @@ class StubBWProject:
 
     def get(self, endpoint, params={}):
         """get without the need for responses library to be used"""
-        if endpoint in ["queries", "tags", "categories"]:
+        if endpoint in ["queries", "tags", "ruletags", "rulecategories"]:
             return self.examples[endpoint]
         elif endpoint.startswith("queries/"):  # e.g. the call is for queries/query_id
             return self.examples["specific_query"]
@@ -98,8 +104,8 @@ class TestBWQueriesCreation(unittest.TestCase):
 
     def test_query_get_provide_id(self):
         """
-      this is the function that before the fix would return TypeError: must be str, not int
-      """
+        this is the function that before the fix would return TypeError: must be str, not int
+        """
         return self.queries.get(query_id)
 
     def test_query_id_get_equal(self):
@@ -109,8 +115,8 @@ class TestBWQueriesCreation(unittest.TestCase):
 
     def test_query_get_provide_None(self):
         """
-      can a user pass nothing into queries.get()
-      """
+        can a user pass nothing into queries.get()
+        """
         actual = self.queries.get()
         expected = self.project.examples["queries"]["results"][0]
         self.assertEqual(actual, expected)
