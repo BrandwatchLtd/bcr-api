@@ -52,7 +52,7 @@ params = {
     "search": str,
     "pageType": (str, list),
     "xpageType": (str, list),
-    "sentiment": str,
+    "sentiment": (str, list),
     "siteGroup": list,  # user passes in a string which gets converted to a list of ids
     "xsiteGroup": list,  # user passes in a string which gets converted to a list of ids
     "domain": str,
@@ -265,7 +265,7 @@ mutable = {
     "removeStatus": str,
     "assignment": str,
     "removeAssignment": str,
-    "sentiment": str,
+    "sentiment": list,
     "checked": bool,
     "starred": bool,
     "location": str,
