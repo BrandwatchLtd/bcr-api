@@ -44,6 +44,7 @@ params = {
     "instagramInteractionsMin": int,
     "language": str,
     "xlanguage": str,
+    "limit: int,  # user passes in an int which decides how many authors or sites to retrieve
     "locationGroup": list,  # user passes in a string which gets converted to a list of ids
     "xlocationGroup": list,  # user passes in a string which gets converted to a list of ids
     "location": str,
