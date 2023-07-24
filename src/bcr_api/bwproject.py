@@ -4,17 +4,14 @@ bwproject contains the BWUser and BWProject classes
 
 import requests
 import time
-import logging
 import json
 
+from .config import DEFAULT_CREDENTIALS_PATH
 from .credentials import CredentialsStore
+from .logger import get_logger
 
-logger = logging.getLogger("bcr_api")
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%H:%M:%S")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+
+logger = get_logger()
 
 
 class BWUser:
@@ -33,7 +30,7 @@ class BWUser:
     def __init__(
         self,
         token=None,
-        token_path="tokens.txt",
+        token_path=DEFAULT_CREDENTIALS_PATH,
         username=None,
         password=None,
         grant_type="api-password",
@@ -48,7 +45,8 @@ class BWUser:
             username:   Brandwatch username.
             password:   Brandwatch password - Optional if you already have an access token.
             token:      Access token - Optional.
-            token_path:  File path to the file where access tokens will be read from and written to - Optional.  Defaults to tokens.txt, pass None to disable.
+            token_path:  File path to the file where access tokens will be read from and written to.
+                        Optional.  Defaults to DEFAULT_CREDENTIALS_PATH, pass None to disable.
         """
         self.apiurl = apiurl
         self.oauthpath = "oauth/token"
@@ -257,7 +255,7 @@ class BWProject(BWUser):
         self,
         project,
         token=None,
-        token_path="tokens.txt",
+        token_path=DEFAULT_CREDENTIALS_PATH,
         username=None,
         password=None,
         grant_type="api-password",

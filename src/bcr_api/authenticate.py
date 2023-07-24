@@ -1,10 +1,9 @@
 # coding=utf-8
 
 from getpass import getpass
-import logging
 from pathlib import Path
 
-from . import credentials
+from bcr_api.config import DEFAULT_CREDENTIALS_PATH
 from .bwproject import BWUser
 
 import argparse
@@ -23,13 +22,6 @@ def authenticate(username, password, credentials_path=None):
 
 
 def main():
-    logger = logging.getLogger("bcr_api")
-    logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(levelname)s: %(message)s", "%H:%M:%S")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
     parser = argparse.ArgumentParser(
         description="Logging to Brandwatch and retrieve and access token.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -40,7 +32,7 @@ def main():
         "-s",
         type=Path,
         metavar="PATH",
-        default=credentials.DEFAULT_CREDENTIALS_PATH,
+        default=DEFAULT_CREDENTIALS_PATH,
         help="Path to where access tokens are stored.",
     )
 

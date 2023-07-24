@@ -3,9 +3,10 @@ bwdata contains the BWData class.
 """
 import datetime
 from . import filters
-import logging
+from .logger import get_logger
 
-logger = logging.getLogger("bcr_api")
+
+logger = get_logger()
 
 
 class BWData:
