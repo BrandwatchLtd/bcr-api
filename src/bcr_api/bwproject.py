@@ -6,6 +6,7 @@ import requests
 import time
 import json
 
+from .config import DEFAULT_CREDENTIALS_PATH
 from .credentials import CredentialsStore
 from .logger import get_logger
 
@@ -29,7 +30,7 @@ class BWUser:
     def __init__(
         self,
         token=None,
-        token_path="tokens.txt",
+        token_path=DEFAULT_CREDENTIALS_PATH,
         username=None,
         password=None,
         grant_type="api-password",
@@ -44,7 +45,8 @@ class BWUser:
             username:   Brandwatch username.
             password:   Brandwatch password - Optional if you already have an access token.
             token:      Access token - Optional.
-            token_path:  File path to the file where access tokens will be read from and written to - Optional.  Defaults to tokens.txt, pass None to disable.
+            token_path:  File path to the file where access tokens will be read from and written to.
+                        Optional.  Defaults to DEFAULT_CREDENTIALS_PATH, pass None to disable.
         """
         self.apiurl = apiurl
         self.oauthpath = "oauth/token"
@@ -253,7 +255,7 @@ class BWProject(BWUser):
         self,
         project,
         token=None,
-        token_path="tokens.txt",
+        token_path=DEFAULT_CREDENTIALS_PATH,
         username=None,
         password=None,
         grant_type="api-password",

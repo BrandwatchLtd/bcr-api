@@ -9,7 +9,6 @@ from pathlib import Path
 from bcr_api.logger import get_logger
 
 
-DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser("~")) / ".bcr" / "credentials.txt"
 
 
 logger = get_logger()
