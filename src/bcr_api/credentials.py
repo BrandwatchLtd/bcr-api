@@ -33,6 +33,11 @@ class CredentialsStore:
     def __getitem__(self, username):
         """Get self[username]"""
         user_tokens = self._read()
+        username = username.lower()
+        if username not in user_tokens:
+            raise KeyError(
+                f"{username} not present in credentials {self._credentials_path}"
+            )
         return user_tokens[username.lower()]
 
     def __setitem__(self, username, token):
