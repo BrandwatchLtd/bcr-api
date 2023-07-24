@@ -3,6 +3,7 @@
 from getpass import getpass
 from pathlib import Path
 
+from bcr_api.config import DEFAULT_CREDENTIALS_PATH
 from . import credentials
 from .bwproject import BWUser
 
@@ -32,7 +33,7 @@ def main():
         "-s",
         type=Path,
         metavar="PATH",
-        default=credentials.DEFAULT_CREDENTIALS_PATH,
+        default=DEFAULT_CREDENTIALS_PATH,
         help="Path to where access tokens are stored.",
     )
 
