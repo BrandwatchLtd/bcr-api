@@ -3,13 +3,16 @@
 credentials contains the CredentialsStore class, which responsible for persisting access tokens to disk.
 """
 
-import logging
 import os
 from pathlib import Path
 
+from bcr_api.logger import get_logger
+
+
 DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser("~")) / ".bcr" / "credentials.txt"
 
-logger = logging.getLogger("bcr_api")
+
+logger = get_logger()
 
 
 class CredentialsStore:

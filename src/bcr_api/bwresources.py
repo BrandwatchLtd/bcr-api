@@ -5,10 +5,10 @@ bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCat
 import json
 from . import filters
 from . import bwdata
-import logging
+from .logger import get_logger
 
 
-logger = logging.getLogger("bcr_api")
+logger = get_logger()
 
 
 class AmbiguityError(ValueError):

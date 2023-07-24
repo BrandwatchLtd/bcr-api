@@ -4,17 +4,13 @@ bwproject contains the BWUser and BWProject classes
 
 import requests
 import time
-import logging
 import json
 
 from .credentials import CredentialsStore
+from .logger import get_logger
 
-logger = logging.getLogger("bcr_api")
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%H:%M:%S")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+
+logger = get_logger()
 
 
 class BWUser:
