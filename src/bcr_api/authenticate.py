@@ -4,7 +4,6 @@ from getpass import getpass
 from pathlib import Path
 
 from bcr_api.config import DEFAULT_CREDENTIALS_PATH
-from . import credentials
 from .bwproject import BWUser
 
 import argparse

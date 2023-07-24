@@ -3,12 +3,10 @@
 credentials contains the CredentialsStore class, which responsible for persisting access tokens to disk.
 """
 
-import os
 from pathlib import Path
 
-from bcr_api.logger import get_logger
-
-
+from .config import DEFAULT_CREDENTIALS_PATH
+from .logger import get_logger
 
 
 logger = get_logger()
