@@ -1,11 +1,11 @@
 import logging
 
 
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+
+
 def get_logger():
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s: %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.DEBUG,
-    )
-    logger = logging.getLogger("bcr_api")
-    return logger
+    return logging.getLogger("bcr_api")
