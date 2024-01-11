@@ -126,15 +126,15 @@ class BWUser:
 
         Keyword Args:
             booleanQuery: Search terms included in the query.
-            language: List of the languages in which you'd like to test the query - Optional.
+            languages: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
         if "booleanQuery" not in kwargs:
             raise KeyError("Must pass: booleanQuery = 'search terms'")
-        if "language" not in kwargs:
-            kwargs["language"] = ["en"]
+        if "languages" not in kwargs:
+            kwargs["languages"] = ["en"]
 
         valid_search = self.request(
             verb=requests.post, address="query-validation", data=json.dumps(kwargs)
@@ -147,15 +147,15 @@ class BWUser:
 
         Keyword Args:
             booleanQuery: Search terms included in the rule.
-            language: List of the languages in which you'd like to test the query - Optional.
+            languages: List of the languages in which you'd like to test the query - Optional.
 
         Raises:
             KeyError: If you don't pass a search or if the search has errors in it.
         """
         if "booleanQuery" not in kwargs:
             raise KeyError("Must pass: booleanQuery = 'search terms'")
-        if "language" not in kwargs:
-            kwargs["language"] = ["en"]
+        if "languages" not in kwargs:
+            kwargs["languages"] = ["en"]
 
         valid_search = self.request(
             verb=requests.get, address="query-validation/searchwithin", params=kwargs
