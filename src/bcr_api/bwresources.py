@@ -245,7 +245,7 @@ class BWResource:
         # validating the query search
         if "search" in filled["filter"]:
             self.project.validate_rule_search(
-                booleanQuery=filled["filter"]["search"], language="en"
+                booleanQuery=filled["filter"]["search"], languages="en"
             )
         return filled
 
@@ -505,7 +505,7 @@ class BWQueries(BWResource, bwdata.BWData):
 
         # validating the query search - comment this out to skip validation
         self.project.validate_query_search(
-            booleanQuery=filled["booleanQuery"], language=["en"]
+            booleanQuery=filled["booleanQuery"], languages=["en"]
         )
         return json.dumps(filled)
 
@@ -1259,7 +1259,7 @@ class BWCategories:
         # validating the rule search
         if "search" in filled["filter"]:
             self.project.validate_rule_search(
-                booleanQuery=filled["filter"]["search"], language="en"
+                booleanQuery=filled["filter"]["search"], languages="en"
             )
         return filled
 
@@ -1626,7 +1626,7 @@ class BWRules(BWResource):
         # validating the query search
         if "search" in filled["filter"]:
             self.project.validate_rule_search(
-                booleanQuery=filled["filter"]["search"], language="en"
+                booleanQuery=filled["filter"]["search"], languages="en"
             )
 
         if "scope" in data:
